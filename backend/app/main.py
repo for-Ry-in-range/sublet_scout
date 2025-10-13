@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
+from app.routes import apartments
 import os
 
 load_dotenv()
@@ -23,6 +24,8 @@ class User(Base):
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.include_router(apartments.router)
 
 @app.get("/")
 def root():
