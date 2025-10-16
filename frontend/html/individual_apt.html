@@ -5,16 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cozy Bedroom in Times Square | Sublet Scout</title>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCY3muo8vY0_SVb93GTKzleP8fHSlYf76Q"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        nav {
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        nav h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            padding: 2rem;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+        }
+
+        .apt-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .apt-images img {
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            height: 250px;
+            object-fit: cover;
+        }
+
+        .details p {
+            margin: 5px 0;
+        }
+
+        ul {
+            list-style-type: square;
+            padding-left: 1.5rem;
+        }
+
+        .map {
+            margin-top: 1.5rem;
+        }
+
+        #google-map {
+            width: 100%;
+            height: 400px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
+    <nav>
+        <h1>Sublet Scout</h1>
+        <div class="nav-links">
+            <a href="homepage.html">Home</a>
+            <a href="search_page.html">Search</a>
+            <a href="profile.html">Profile</a>
+            <a href="login.html">Login</a>
+        </div>
+    </nav>
+
     <div class="container">
         <h1>Cozy Bedroom in Times Square</h1>
 
         <div class="apt-images">
-            <img src="../src/images/ee6a6e4d-28f9-43a1-b49c-39b2c71febb4.jpg" alt="Apt Image 1" style="width: auto; height: 290px;">
-            <img src="../src/images/1d059ed9-0c78-4d6f-a3c7-c1adde9d152e.jpg" alt="Apt Image 2" style="width: auto; height: 290px;">
-            <img src="../src/images/933b99ab-06a6-4d12-a7cc-646d460d2983.jpg" alt="Apt Image 3" style="width: auto; height: 290px;">
-            <img src="../src/images/0d4c7668-9db9-4f09-b495-2e8ae8c5ee8d.jpg" alt="Apt Image 4" style="width: auto; height: 290px;">
+            <img src="../src/images/ee6a6e4d-28f9-43a1-b49c-39b2c71febb4.jpg" alt="Apt Image 1">
+            <img src="../src/images/1d059ed9-0c78-4d6f-a3c7-c1adde9d152e.jpg" alt="Apt Image 2">
+            <img src="../src/images/933b99ab-06a6-4d12-a7cc-646d460d2983.jpg" alt="Apt Image 3">
+            <img src="../src/images/0d4c7668-9db9-4f09-b495-2e8ae8c5ee8d.jpg" alt="Apt Image 4">
         </div>
 
         <div class="details">
@@ -28,7 +117,7 @@
 
         <div class="map">
             <h2>Location</h2>
-            <div id="google-map" style="width: 40%; height: 400px;"></div>
+            <div id="google-map"></div>
         </div>
 
         <h2>Amenities</h2>
@@ -42,6 +131,7 @@
             <li>Refrigerator</li>
         </ul>
     </div>
+
     <script>
         function initMap() {
             const location = { lat: 40.758896, lng: -73.985130 };
@@ -49,7 +139,7 @@
                 zoom: 14,
                 center: location,
             });
-            const marker = new google.maps.Marker({
+            new google.maps.Marker({
                 position: location,
                 map: map,
             });
