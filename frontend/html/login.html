@@ -9,15 +9,30 @@
 
     <h2>Login</h2>
 
-    <form action="/login" method="POST">
+
+    <form id="loginForm" action="/login" method="POST">
         <label for="email">Email:</label><br>
         <input type="email" id="email" name="email" required><br><br>
 
         <label for="password">Password:</label><br>
         <input type="password" id="password" name="password" required><br><br>
 
+        <span id="emailError" style="color:red; display:none;">Email must end with .edu</span><br>
         <button type="submit">Login</button>
     </form>
+
+    <script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        var email = document.getElementById('email').value.trim();
+        var error = document.getElementById('emailError');
+        if (!email.endsWith('.edu')) {
+            error.style.display = 'inline';
+            event.preventDefault();
+        } else {
+            error.style.display = 'none';
+        }
+    });
+    </script>
 
 </body>
 </html>
