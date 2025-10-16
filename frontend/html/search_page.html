@@ -17,6 +17,19 @@
             padding: 1rem;
             text-align: center;
         }
+        .layout {
+            display: flex;
+        }
+        .content {
+            flex: 3;
+            padding: 1rem;
+        }
+        .sidebar {
+            flex: 1;
+            background: #f7f7f7;
+            border-left: 1px solid #ccc;
+            padding: 1rem;
+        }
         .search-bar {
             display: flex;
             justify-content: center;
@@ -56,6 +69,17 @@
             height: 400px;
             margin-top: 1rem;
         }
+        .nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        .nav li {
+            margin-bottom: 10px;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #2c3e50;
+        }
     </style>
 </head>
 <body>
@@ -64,30 +88,45 @@
         <p>Find Available Subleases in NYC</p>
     </header>
 
-    <section class="search-bar">
-        <input type="text" placeholder="Search by neighborhood, address, or school..." />
-        <button>Search</button>
-    </section>
+    <div class="layout">
+        <!-- Main Content -->
+        <div class="content">
+            <section class="search-bar">
+                <input type="text" placeholder="Search by neighborhood, address, or school..." />
+                <button>Search</button>
+            </section>
 
-    <section class="results">
-        <!-- Example sublease cards (obv we'll replace with backend data later) -->
-        <div class="card">
-            <h3>1-Bedroom in East Village</h3>
-            <p>$1200 / month</p>
-            <p>Available: June - August</p>
+            <section class="results">
+                <div class="card">
+                    <h3>1-Bedroom in East Village</h3>
+                    <p>$1200 / month</p>
+                    <p>Available: June - August</p>
+                </div>
+                <div class="card">
+                    <h3>Studio near Columbia</h3>
+                    <p>$900 / month</p>
+                    <p>Available: May - July</p>
+                </div>
+            </section>
+
+            <section>
+                <div id="map"></div>
+            </section>
         </div>
-        <div class="card">
-            <h3>Studio near Columbia</h3>
-            <p>$900 / month</p>
-            <p>Available: May - July</p>
+
+        <div class="sidebar">
+            <div class="nav">
+                <ul>
+                    <li><a href="homepage.html">Home</a></li>
+                    <li><a href="search_page.html">Search</a></li>
+                    <li><a href="individual_apt.html">Listings</a></li>
+                    <li><a href="profile.html">Profile</a></li>
+                    <li><a href="login.html">Login</a></li>
+                </ul>
+            </div>
         </div>
-    </section>
+    </div>
 
-    <section>
-        <div id="map"></div>
-    </section>
-
-    <!-- Google Maps API (later we'll plug in API key) -->
     <script>
         function initMap() {
             var nyc = { lat: 40.7128, lng: -74.0060 };
