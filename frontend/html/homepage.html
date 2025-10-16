@@ -4,9 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sublet Scout | Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            height: 100vh;
+            border-collapse: collapse;
+        }
+
+        .container {
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 1.5rem;
+        }
+
+        input, button {
+            padding: 0.5rem;
+            width: 80%;
+            max-width: 300px;
+            margin-top: 0.3rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .nav {
+            background-color: #2c3e50;
+            height: 100vh;
+            padding: 2rem 1rem;
+            color: white;
+        }
+
+        .nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .nav li {
+            margin: 1rem 0;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <table width="100%">
+    <table>
         <tr>
             <td valign="top" width="75%">
                 <div class="container">
@@ -14,7 +97,7 @@
                     <p>Find verified student sublets in New York City.</p>
 
                     <h2>Search for Sublets</h2>
-                    <form action="search.html" method="get">
+                    <form action="search_page.html" method="get">
                         <label for="location">Location:</label><br>
                         <input type="text" id="location" name="location" placeholder="Enter neighborhood or city"><br><br>
 
@@ -28,16 +111,16 @@
                     </form>
 
                     <h2>Featured Listing</h2>
-                    <p><a href="apartment.html">Cozy Bedroom in Times Square</a> – $2,200/month</p>
+                    <p><a href="individual_apt.html">Cozy Bedroom in Times Square</a> – $2,200/month</p>
                 </div>
             </td>
             <td valign="top" width="25%">
                 <div class="nav">
                     <ul>
-                        <li><a href="profile.html">Profile</a></li>
                         <li><a href="homepage.html">Home</a></li>
                         <li><a href="search_page.html">Search</a></li>
                         <li><a href="individual_apt.html">Listings</a></li>
+                        <li><a href="profile.html">Profile</a></li>
                         <li><a href="login.html">Login</a></li>
                     </ul>
                 </div>
