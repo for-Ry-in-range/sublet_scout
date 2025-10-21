@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
 from app.database import Base
 
 class Listing(Base):

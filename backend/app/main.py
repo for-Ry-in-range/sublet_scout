@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
-from app.routes import apartments
+#from app.routes import apartments
 
 # Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-app.include_router(apartments.router)
+#app.include_router(apartments.router)
 
 @app.get("/")
 def root():
