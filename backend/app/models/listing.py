@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float
-from databse import Base
+from app.database import Base
 
 class Listing(Base):
     __tablename__ = "listings"
