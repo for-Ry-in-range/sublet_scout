@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sublet Scout | Messages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            height: 100vh;
+            border-collapse: collapse;
+        }
+
+        .container {
+            padding: 2rem;
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+        }
+
+        .nav {
+            background-color: #2c3e50;
+            height: 100vh;
+            padding: 2rem 1rem;
+            color: white;
+        }
+
+        .nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .nav li {
+            margin: 1rem 0;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .nav a:hover {
+            text-decoration: underline;
+        }
+
+        .messaging {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: white;
+            height: 80vh;
+        }
+
+        .contacts {
+            width: 30%;
+            border-right: 1px solid #ccc;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .contacts h3 {
+            color: #34495e;
+        }
+
+        .contact {
+            padding: 0.8rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .contact:hover {
+            background-color: #f0f0f0;
+        }
+
+        .chat-window {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1rem;
+        }
+
+        .messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            line-height: 1.4;
+        }
+
+        .message strong {
+            color: #2c3e50;
+        }
+
+        .sent {
+            text-align: right;
+            color: #2980b9;
+        }
+
+        .input-area {
+            display: flex;
+            margin-top: 1rem;
+        }
+
+        .input-area input {
+            flex-grow: 1;
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .input-area button {
+            padding: 0.5rem 1rem;
+            background-color: #3498db;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+
+        .input-area button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <tr>
+            <td valign="top" width="75%">
+                <div class="container">
+                    <h1>Messages</h1>
+                    <div class="messaging">
+                        <div class="contacts">
+                            <h3>Contacts</h3>
+                            <div class="contact"><strong>Yatin Marpu</strong><br>East Village Studio</div>
+                            <div class="contact"><strong>Hailee Yun</strong><br>Cozy Bedroom in Times Square</div>
+                            <div class="contact"><strong>Mahdi Naim</strong><br>Upper West Side Sublet</div>
+                            <div class="contact"><strong>Ryan Wong</strong><br>Brooklyn Shared Apartment</div>
+                        </div>
+
+                        <div class="chat-window">
+                            <div class="messages">
+                                <div class="message"><strong>Hailee:</strong> Hi! Is your Times Square sublet still available?</div>
+                                <div class="message sent"><strong>You:</strong> Yes, it’s available from May to August.</div>
+                                <div class="message"><strong>Hailee:</strong> Great! Could I come see the place next weekend?</div>
+                                <div class="message sent"><strong>You:</strong> Sure, Saturday afternoon works for me.</div>
+                            </div>
+                            <div class="input-area">
+                                <input type="text" placeholder="Type your message..." />
+                                <button>Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td valign="top" width="25%">
+                <div class="nav">
+                    <h2>Navigation</h2>
+                    <ul>
+                        <li><a href="homepage.html">Home</a></li>
+                        <li><a href="search_page.html">Search</a></li>
+                        <li><a href="individual_apt.html">Listings</a></li>
+                        <li><a href="profile.html">Profile</a></li>
+                        <li><a href="messaging.html">Messages</a></li>
+                        <li><a href="login.html">Login</a></li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
