@@ -1,4 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+import os
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
@@ -10,7 +14,12 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 #app.include_router(apartments.router)
 
-@app.get("/")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+templates = Jinja2Templates(directory=os.path.join(FRONTEND_DIR, "html"))
+app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="static")
+
+@app.get("/health")
 def root():
     return {"message": "Connected to Neon PostgreSQL successfully!"}
 
@@ -30,3 +39,7 @@ def list_users():
     result = [{"id": u.id, "name": u.name, "email": u.email} for u in users]
     session.close()
     return result
+
+@app.get("/", response_class=HTMLResponse)
+def show_login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
