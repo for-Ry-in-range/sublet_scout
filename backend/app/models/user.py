@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from database import Base
+from app.database import Base
 
 class User(Base):
     __tablename__ = "users"
@@ -12,6 +12,5 @@ class User(Base):
     #  this way we don't have to build a messaging system
     #  i was thinking of using phone numbers but that raises privacy concerns
     password_hash = Column(String, nullable=False)
-    school = Column(String, nullable=True)
 
     listings = relationship("Listing", back_populates="lister_user")
