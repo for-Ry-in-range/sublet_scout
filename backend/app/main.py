@@ -2,11 +2,14 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv
 import os
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
 #from app.routes import apartments
+
+load_dotenv()
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -43,3 +46,9 @@ def list_users():
 @app.get("/", response_class=HTMLResponse)
 def show_login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/individual_apt", response_class=HTMLResponse)
+async def render_individual_apt(request: Request):
+    map_key = os.getenv("GOOGLE_MAP_KEY")
+    print("MAP_KEY:", map_key)
+    return templates.TemplateResponse("individual_apt.html", {"request": request, "map_key": map_key})
