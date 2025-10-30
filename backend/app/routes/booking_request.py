@@ -6,13 +6,29 @@ from app.schemas import *
 router = APIRouter()
 
 @router.get("/booking_request/{booking_request_id}")
-def read_booking_request(booking_request_id: int, db=Depends(get_db)):
-    return get_booking_request_by_id(db, booking_request_id)
+def read_booking_request_endpoint(booking_request_id: int, db=Depends(get_db)):
+    try:
+        res = get_booking_request_by_id(db, booking_request_id)
+        if not res:
+            raise HTTPException(status_code=404, detail="Booking request not found")
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/create_booking_request}")
-def create_booking_request(request_data: BookingRequestStructure, db=Depends(get_db)):
-    create_booking_request(db, request_data)
+@router.post("/create_booking_request")
+def create_booking_request_endpoint(request_data: BookingRequestStructure, db=Depends(get_db)):
+    try:
+        res = create_booking_request(db, request_data)
+        return {"message": "Booking request created successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/create_booking_request/del/{booking_request_id}")
-def delete_booking_request(booking_request_id: int, db=Depends(get_db)):
-    return delete_booking_request(db, booking_request_id)
+@router.delete("/delete_booking_request/{booking_request_id}")
+def delete_booking_request_endpoint(booking_request_id: int, db=Depends(get_db)):
+    try:
+        res = delete_booking_request(db, booking_request_id)
+        if not res:
+            raise HTTPException(status_code=404, detail="Booking request not found")
+        return { "message": "Booking request deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
