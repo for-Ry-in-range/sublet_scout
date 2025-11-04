@@ -1,38 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login / Sign Up</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; padding: 24px; }
+    h2 { margin-bottom: 16px; }
+    .container { display: flex; flex-wrap: wrap; gap: 24px; max-width: 1000px; }
+    .card { flex: 1 1 360px; border: 1px solid #ddd; border-radius: 8px; padding: 16px; }
+    label { display: block; margin-top: 10px; font-weight: 600; }
+    input { width: 100%; padding: 8px; margin-top: 6px; box-sizing: border-box; }
+    button { margin-top: 14px; padding: 10px 14px; cursor: pointer; }
+    .muted { color: #666; font-size: 0.9rem; margin-top: 8px; }
+    .error { color: #b00020; margin-top: 8px; }
+    .success { color: #006400; margin-top: 8px; }
+  </style>
 </head>
 <body>
 
-    <h2>Login</h2>
+  <h2>Login or Sign Up</h2>
 
+  <div class="container">
+    <!-- Login -->
+    <div class="card">
+      <h3>Login</h3>
+      <form id="login-form" action="/login" method="POST" novalidate>
+        <label for="login-email">Email (must end with .edu):</label>
+        <input type="email" id="login-email" name="email" required />
 
-    <form id="loginForm" action="/login" method="POST">
-        <label for="email">Email:</label><br>
-        <input type="email" id="email" name="email" required><br><br>
+        <label for="login-password">Password:</label>
+        <input type="password" id="login-password" name="password" required />
 
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
-
-        <span id="emailError" style="color:red; display:none;">Email must end with .edu</span><br>
         <button type="submit">Login</button>
-    </form>
+        <div id="login-msg" class="muted" aria-live="polite"></div>
+        <div id="login-error" class="error" aria-live="polite"></div>
+      </form>
+    </div>
 
-    <script>
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
-        var email = document.getElementById('email').value.trim();
-        var error = document.getElementById('emailError');
-        if (!email.endsWith('.edu')) {
-            error.style.display = 'inline';
-            event.preventDefault();
-        } else {
-            error.style.display = 'none';
-        }
+    <!-- Sign Up -->
+    <div class="card">
+      <h3>Sign Up</h3>
+      <form id="signup-form" novalidate>
+        <label for="signup-email">Email (must end with .edu):</label>
+        <input type="email" id="signup-email" name="email" required />
+
+        <label for="signup-password">Password (min 8 chars):</label>
+        <input type="password" id="signup-password" name="password" minlength="8" required />
+
+        <button type="submit">Create Account</button>
+
+        <div id="signup-success" class="success" aria-live="polite"></div>
+        <div id="signup-error" class="error" aria-live="polite"></div>
+
+        <p class="muted">After signing up, the server should send a confirmation email with a verification link.</p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function isEduEmail(email) {
+      return typeof email === 'string' && email.trim().toLowerCase().endsWith('.edu');
+    }
+
+    // Enforce .edu on login submit (prevents form submit if invalid)
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      const email = document.getElementById('login-email').value;
+      const err = document.getElementById('login-error');
+      const msg = document.getElementById('login-msg');
+      err.textContent = '';
+      msg.textContent = '';
+
+      if (!isEduEmail(email)) {
+        e.preventDefault();
+        err.textContent = 'Email must end with .edu.';
+        return;
+      }
+      msg.textContent = 'Logging in…';
     });
-    </script>
+
+    // AJAX sign up with .edu + password length checks
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const successEl = document.getElementById('signup-success');
+      const errorEl = document.getElementById('signup-error');
+      successEl.textContent = '';
+      errorEl.textContent = '';
+
+      if (!isEduEmail(email)) {
+        errorEl.textContent = 'Email must end with .edu.';
+        return;
+      }
+      if (!password || password.length < 8) {
+        errorEl.textContent = 'Password must be at least 8 characters.';
+        return;
+      }
+
+      try {
+        const res = await fetch('/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (res.ok) {
+          successEl.textContent = 'If the account was created, a confirmation email has been sent. Check your inbox (and spam).';
+          e.target.reset();
+        } else {
+          let text = await res.text();
+          try {
+            const j = JSON.parse(text);
+            text = j.detail || j.message || text;
+          } catch (_) { /* leave text as-is */ }
+          errorEl.textContent = text || `Signup failed (${res.status}).`;
+        }
+      } catch (err) {
+        errorEl.textContent = 'Network error: ' + (err?.message || err);
+      }
+    });
+  </script>
 
 </body>
 </html>
