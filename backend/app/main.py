@@ -65,6 +65,7 @@ async def render_individual_apt(request: Request):
 
 @app.get("/search", response_class=HTMLResponse)
 def show_search(request: Request, q: str | None = None):
+    map_key = os.getenv("GOOGLE_MAP_KEY")
     results = []
     if q:
         session = SessionLocal()
@@ -81,7 +82,10 @@ def show_search(request: Request, q: str | None = None):
             ]
         finally:
             session.close()
-    return templates.TemplateResponse("search_page.html", {"request": request, "query": q or "", "results": results})
+    return templates.TemplateResponse(
+        "search_page.html",
+        {"request": request, "query": q or "", "results": results, "map_key": map_key}
+    )
 
 @app.get("/profile/{user_id}", response_class=HTMLResponse)
 def show_profile(request: Request, user_id: int):
