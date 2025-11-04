@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy.orm import relationship
 from app.database import Base
 
 class Listing(Base):
@@ -18,3 +19,5 @@ class Listing(Base):
     state = Column(String)
     zip_code = Column(String)  # String just in case there's leading zeros
     amenities = Column(String)
+
+    lister_user = relationship("User", back_populates="listings")
