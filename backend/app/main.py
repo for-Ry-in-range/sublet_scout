@@ -7,6 +7,7 @@ import os
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
+from app.schemas import SearchFilterStructure
 #from app.routes import apartments
 
 load_dotenv()
@@ -119,3 +120,23 @@ def show_profile(request: Request, user_id: int):
         session.close()
 
     return templates.TemplateResponse("profile.html", {"request": request, "user": user_data, "listings": listings_data})
+
+@app.get("/search_results")
+def get_search_results(filters: SearchFilterStructure):
+    session = SessionLocal()
+    try:
+        query = session.query(Listing)  # Initialize query for the Listing table
+        if filters.cost_per_month:
+            query = query.filter(Listing.cost_per_month <= filters.cost_per_month)
+        if filters.bedrooms_available:
+            query = query.filter(Listing.bedrooms_available >= filters.bedrooms_available)
+        if filters.bathrooms:
+            query = query.filter(Listing.bathrooms >= filters.bathrooms)
+        if filters.available_start_date:
+            query = query.filter(Listing.available_start_date <= filters.available_start_date)
+        if filters.available_end_date:
+            query = query.filter(Listing.available_end_date >= filters.available_end_date)
+        results = query.all()
+        return results
+    finally:
+        session.close()
