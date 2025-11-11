@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, HTTPException, status
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
-import os
+import hashlib, hmac, binascii, os
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
@@ -39,12 +39,133 @@ def list_users():
 def show_login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
-@app.get("/homepage", response_class=HTMLResponse)
-def show_homepage(request: Request):
+def hash_password(password: str, iterations: int = 100_000) -> str:
+    """Return a string storing iterations, salt, and hash so we can verify later."""
+    salt = os.urandom(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+    return f"{iterations}${binascii.hexlify(salt).decode()}${binascii.hexlify(dk).decode()}"
+
+import hmac  # add this at the top
+
+def verify_password(stored: str, password: str) -> bool:
+    """Verify password against stored string created by hash_password."""
+    try:
+        iterations_str, salt_hex, hash_hex = stored.split("$")
+        iterations = int(iterations_str)
+        salt = binascii.unhexlify(salt_hex)
+        expected = binascii.unhexlify(hash_hex)
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+        return hmac.compare_digest(dk, expected)
+    except Exception:
+        return False
+
+
+@app.post("/signup")
+async def signup(request: Request):
+    """
+    Accepts JSON { email, password } and creates a user if:
+      - email ends with .edu
+      - password length >= 8
+      - email unique
+    Returns JSON 201 on success or a JSON error message.
+    """
+    data = {}
+    # Accept JSON body (frontend signup uses fetch JSON)
+    try:
+        data = await request.json()
+    except Exception:
+        # Not a JSON body
+        return JSONResponse({"message": "Expected JSON body"}, status_code=status.HTTP_400_BAD_REQUEST)
+
+    email = (data.get("email") or "").strip().lower()
+    first_name = (data.get("first_name") or "").strip()
+    last_name = (data.get("last_name") or "").strip()
+    password = data.get("password") or ""
+
+    if not email.endswith(".edu"):
+        return JSONResponse({"message": "Email must end with .edu"}, status_code=status.HTTP_400_BAD_REQUEST)
+    if not first_name:
+        return JSONResponse({"message": "First name is required"}, status_code=status.HTTP_400_BAD_REQUEST)
+    if not last_name:
+        return JSONResponse({"message": "Last name is required"}, status_code=status.HTTP_400_BAD_REQUEST)
+    if len(password) < 8:
+        return JSONResponse({"message": "Password must be at least 8 characters"}, status_code=status.HTTP_400_BAD_REQUEST)
+
+    full_name = f"{first_name} {last_name}"
+
     session = SessionLocal()
     try:
+        # Check uniqueness
+        existing = session.query(User).filter(User.email == email).first()
+        if existing:
+            return JSONResponse({"message": "Email already registered"}, status_code=status.HTTP_409_CONFLICT)
+
+        # Hash password
+        password_hash = hash_password(password)
+
+        new_user = User(name=full_name, email=email, password_hash=password_hash)
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
+
+        return JSONResponse({"message": "Account created", "user": {"id": new_user.id, "email": new_user.email}}, status_code=status.HTTP_201_CREATED)
+    finally:
+        session.close()
+
+@app.post("/login")
+async def login(request: Request):
+    """
+    Accepts form POST (from your current login form) or JSON {email, password}.
+    On successful auth, redirects to /homepage. On failure returns 401 JSON or a simple message.
+    """
+    # Try JSON first
+    email = password = None
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            email = (body.get("email") or "").strip().lower()
+            password = body.get("password") or ""
+        except Exception:
+            return JSONResponse({"message": "Invalid JSON"}, status_code=status.HTTP_400_BAD_REQUEST)
+    else:
+        # fallback to form data (your login form submits form POST)
+        form = await request.form()
+        email = (form.get("email") or "").strip().lower()
+        password = form.get("password") or ""
+
+
+    if not email or not password:
+        return JSONResponse({"message": "Email and password required"}, status_code=status.HTTP_400_BAD_REQUEST)
+
+    session = SessionLocal()
+    try:
+        user_obj = session.query(User).filter(User.email == email).first()
+        if not user_obj:
+            # keep response generic in real apps; for dev we return message
+            return JSONResponse({"message": "User doesn't exist"}, status_code=status.HTTP_401_UNAUTHORIZED)
+
+        if not verify_password(user_obj.password_hash, password):
+            return JSONResponse({"message": "Incorrect password"}, status_code=status.HTTP_401_UNAUTHORIZED)
+
+        # Auth succeeded. For now we simply redirect to homepage.
+        # NOTE: no session/cookie is set — add session or JWT later if you want persistent login.
+        return RedirectResponse(url=f"/homepage?user_id={user_obj.id}", status_code=status.HTTP_303_SEE_OTHER)
+    finally:
+        session.close()
+
+
+@app.get("/homepage", response_class=HTMLResponse)
+def show_homepage(request: Request, user_id: int | None = None):
+    session = SessionLocal()
+    user_name = None
+    try:
+        if user_id is not None:
+            user_obj = session.get(User, user_id)
+            if user_obj:
+                user_name = user_obj.name
+
         listings = session.query(Listing).all()
-        
         listings_data = [
             {
                 "id": l.id,
@@ -55,8 +176,7 @@ def show_homepage(request: Request):
         ]
     finally:
         session.close()
-    return templates.TemplateResponse("homepage.html", {"request": request, "listings": listings_data})
-
+    return templates.TemplateResponse("homepage.html", {"request": request, "listings": listings_data, "user_name": user_name})
 
 @app.get("/individual_apt", response_class=HTMLResponse)
 async def render_individual_apt(request: Request):

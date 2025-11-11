@@ -12,6 +12,12 @@
             <td valign="top" width="75%">
                 <div class="container">
                     <h1>Sublet Scout</h1>
+                    {% if user_name %}
+                        <p>Welcome, {{ user_name }}!</p>
+                    {% else %}
+                        <p>Welcome!</p>
+                    {% endif %}
+
                     <p>Find verified student sublets in New York City.</p>
 
                     <h2>Search for Sublets</h2>

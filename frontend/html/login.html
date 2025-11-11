@@ -44,6 +44,12 @@
       <form id="signup-form" novalidate>
         <label for="signup-email">Email (must end with .edu):</label>
         <input type="email" id="signup-email" name="email" required />
+        
+        <label for="signup-first">First name:</label>
+        <input type="text" id="signup-first" name="first_name" required />
+
+        <label for="signup-last">Last name:</label>
+        <input type="text" id="signup-last" name="last_name" required />
 
         <label for="signup-password">Password (min 8 chars):</label>
         <input type="password" id="signup-password" name="password" minlength="8" required />
@@ -83,6 +89,8 @@
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('signup-email').value;
+      const first = document.getElementById('signup-first').value.trim();
+      const last = document.getElementById('signup-last').value.trim();
       const password = document.getElementById('signup-password').value;
       const successEl = document.getElementById('signup-success');
       const errorEl = document.getElementById('signup-error');
@@ -91,6 +99,14 @@
 
       if (!isEduEmail(email)) {
         errorEl.textContent = 'Email must end with .edu.';
+        return;
+      }
+      if (!first) {
+      errorEl.textContent = 'First name is required.';
+      return;
+      }
+      if (!last) {
+        errorEl.textContent = 'Last name is required.';
         return;
       }
       if (!password || password.length < 8) {
@@ -102,7 +118,7 @@
         const res = await fetch('/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ first_name: first, last_name: last, email, password })
         });
 
         if (res.ok) {
