@@ -18,8 +18,8 @@ class ListingStructure(BaseModel):
     amenities: str
 
 class BookingRequestStructure(BaseModel):
-    listing_id = int
-    subletter_id = int
+    listing_id: int
+    subletter_id: int
 
 class SearchFilterStructure(BaseModel):
     cost_per_month: float
