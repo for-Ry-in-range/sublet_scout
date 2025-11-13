@@ -7,6 +7,22 @@
     <link rel="stylesheet" href="{{ url_for('static', path='homepage.css') }}">
 </head>
 <body>
+    <nav class="nav">
+        <ul>
+            <li><a href="{{ url_for('show_homepage') }}">Home</a></li>
+            <li><a href="{{ url_for('show_search') }}">Search</a></li>
+            <li><a href="{{ url_for('render_individual_apt') }}">Listings</a></li>
+            {% if user_name and user_id %}
+                <li><a href="{{ url_for('show_profile', user_id=user_id) }}">Profile</a></li>
+            {% else %}
+                <!-- If no user logged in, link profile to login page -->
+                <li><a href="{{ url_for('show_login') }}">Profile</a></li>
+            {% endif %}
+            <!-- TODO: /messaging route isn't defined in main.py yet -->
+            <li><a href="/messaging">Messages</a></li>
+            <li><a href="{{ url_for('show_login') }}">Login</a></li>
+        </ul>
+    </nav>
     <table>
         <tr>
             <td valign="top" width="75%">
@@ -36,18 +52,6 @@
 
                     <h2>Featured Listing</h2>
                     <p><a href="individual_apt.html">Cozy Bedroom in Times Square</a> – $2,200/month</p>
-                </div>
-            </td>
-            <td valign="top" width="25%">
-                <div class="nav">
-                    <ul>
-                        <li><a href="homepage.html">Home</a></li>
-                        <li><a href="search_page.html">Search</a></li>
-                        <li><a href="individual_apt.html">Listings</a></li>
-                        <li><a href="profile.html">Profile</a></li>
-                        <li><a href="messaging.html">Messages</a></li>
-                        <li><a href="login.html">Login</a></li>
-                    </ul>
                 </div>
             </td>
         </tr>
