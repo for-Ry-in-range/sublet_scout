@@ -176,7 +176,11 @@ def show_homepage(request: Request, user_id: int | None = None):
         ]
     finally:
         session.close()
-    return templates.TemplateResponse("homepage.html", {"request": request, "listings": listings_data, "user_name": user_name})
+    # include user_id so templates can emit links that preserve it
+    return templates.TemplateResponse(
+        "homepage.html",
+        {"request": request, "listings": listings_data, "user_name": user_name, "user_id": user_id}
+    )
 
 @app.get("/individual_apt", response_class=HTMLResponse)
 async def render_individual_apt(request: Request):

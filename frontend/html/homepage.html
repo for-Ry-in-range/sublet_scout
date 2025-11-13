@@ -9,7 +9,13 @@
 <body>
     <nav class="nav">
         <ul>
-            <li><a href="{{ url_for('show_homepage') }}">Home</a></li>
+            <li>
+                {% if user_id %}
+                    <a href="{{ url_for('show_homepage') }}?user_id={{ user_id }}">Home</a>
+                {% else %}
+                    <a href="{{ url_for('show_homepage') }}">Home</a>
+                {% endif %}
+            </li>
             <li><a href="{{ url_for('show_search') }}">Search</a></li>
             <li><a href="{{ url_for('render_individual_apt') }}">Listings</a></li>
             {% if user_name and user_id %}
