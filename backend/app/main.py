@@ -8,6 +8,8 @@ from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
 from app.schemas import SearchFilterStructure
+from app.routes.listing import router as listing_router
+from app.routes.booking_request import router as br_router
 #from app.routes import apartments
 
 load_dotenv()
@@ -22,6 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 templates = Jinja2Templates(directory=os.path.join(FRONTEND_DIR, "html"))
 app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="static")
+
+app.include_router(listing_router)
+app.include_router(br_router)
 
 @app.get("/health")
 def root():
