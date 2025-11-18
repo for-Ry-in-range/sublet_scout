@@ -1,49 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sublet Scout | Profile</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='profile.css') }}">
-</head>
-<body>
-    <table>
-        <tr>
-            <td valign="top" width="75%">
-                <div class="container">
-                    <h1>User Profile</h1>
+{% extends "base.html" %}
 
-                    <h2>Account Information</h2>
-                    <p><strong>Name:</strong> Jane Doe</p>
-                    <p><strong>School:</strong> New York University</p>
-                    <p><strong>Email:</strong> jane.doe@nyu.edu</p>
+{% block title %}Sublet Scout | Profile{% endblock %}
 
-                    <h2>Your Listings</h2>
-                    <p><a href="individual_apt.html">Cozy Bedroom in Times Square</a> – Active</p>
-                    <p><a href="#">East Village Studio</a> – Inactive</p>
-                    <p><a href="#">Upper West Side Sublet</a> – Pending Approval</p>
+{% block content %}
+    <div class="container">
+        <h1>User Profile</h1>
 
-                    <h2>Account Actions</h2>
-                    <ul>
-                        <li><a href="#">Edit Profile</a></li>
-                        <li><a href="#">Add New Listing</a></li>
-                        <li><a href="login.html">Logout</a></li>
-                    </ul>
-                </div>
-            </td>
-            <td valign="top" width="25%">
-                <div class="nav">
-                    <ul>
-                        <li><a href="homepage.html">Home</a></li>
-                        <li><a href="search_page.html">Search</a></li>
-                        <li><a href="individual_apt.html">Listings</a></li>
-                        <li><a href="profile.html">Profile</a></li>
-                        <li><a href="messaging.html">Messages</a></li>
-                        <li><a href="login.html">Login</a></li>
-                    </ul>
-                </div>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
+        <h2>Account Information</h2>
+        {% if user %}
+            <p><strong>Name:</strong> {{ user.name }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+        {% else %}
+            <p>User information not available.</p>
+        {% endif %}
+
+        <h2>Your Listings</h2>
+        {% if listings %}
+            <ul>
+                {% for l in listings %}
+                    <li>
+                        {{ l.title }} – ${{ l.cost_per_month }}
+                        <a href="{{ url_for('render_individual_apt') }}{% if user_id %}?user_id={{ user_id }}{% endif %}">View</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No listings found.</p>
+        {% endif %}
+
+        <h2>Account Actions</h2>
+        <ul>
+            <li><a href="#">Edit Profile</a></li>
+            <li><a href="#">Add New Listing</a></li>
+            <li><a href="{{ url_for('show_login') }}">Logout</a></li>
+        </ul>
+    </div>
+{% endblock %}

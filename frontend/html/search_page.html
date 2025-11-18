@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sublet Scout - Search Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='search_page.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Sublet Scout - Search Page{% endblock %}
+
+{% block content %}
     <header>
         <h1>Sublet Scout</h1>
         <p>Find Available Subleases in NYC</p>
@@ -16,40 +12,37 @@
 
         <div class="content">
             <section class="search-bar">
-                <input type="text" placeholder="Search by neighborhood, address, or school..." />
-                <button>Search</button>
+                <form action="{{ url_for('show_search') }}" method="get" style="display:flex;gap:.5rem;align-items:center;">
+                    <input type="text" name="q" placeholder="Search by neighborhood, address, or school..." />
+                    {% if user_id %}
+                        <input type="hidden" name="user_id" value="{{ user_id }}">
+                    {% endif %}
+                    <button type="submit">Search</button>
+                </form>
             </section>
 
             <section class="results">
+                {% for r in results %}
                 <div class="card">
-                    <h3>1-Bedroom in East Village</h3>
-                    <p>$1200 / month</p>
-                    <p>Available: June - August</p>
+                    <h3>{{ r.title }}</h3>
+                    <p>${{ r.cost_per_month }} / month</p>
+                    {% if r.available_start_date or r.available_end_date %}
+                        <p>Available: {{ r.available_start_date or "N/A" }} - {{ r.available_end_date or "N/A" }}</p>
+                    {% endif %}
+                    <p><a href="{{ url_for('render_individual_apt') }}{% if user_id %}?user_id={{ user_id }}{% endif %}">View listing</a></p>
                 </div>
+                {% else %}
                 <div class="card">
-                    <h3>Studio near Columbia</h3>
-                    <p>$900 / month</p>
-                    <p>Available: May - July</p>
+                    <p>No results found.</p>
                 </div>
+                {% endfor %}
             </section>
 
             <section>
-                <div id="map"></div>
+                <div id="map" style="height:360px;width:100%;"></div>
             </section>
         </div>
 
-        <div class="sidebar">
-            <div class="nav">
-                <ul>
-                    <li><a href="homepage.html">Home</a></li>
-                    <li><a href="search_page.html">Search</a></li>
-                    <li><a href="individual_apt.html">Listings</a></li>
-                    <li><a href="profile.html">Profile</a></li>
-                    <li><a href="messaging.html">Messages</a></li>
-                    <li><a href="login.html">Login</a></li>
-                </ul>
-            </div>
-        </div>
     </div>
 
     <!-- Google Maps -->
@@ -66,5 +59,4 @@
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key={{ map_key }}&callback=initMap">
     </script>
-</body>
-</html>
+{% endblock %}

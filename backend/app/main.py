@@ -183,19 +183,38 @@ def show_homepage(request: Request, user_id: int | None = None):
     )
 
 @app.get("/individual_apt", response_class=HTMLResponse)
-async def render_individual_apt(request: Request):
+async def render_individual_apt(request: Request, user_id: int | None = None):
     map_key = os.getenv("GOOGLE_MAP_KEY")
-    print("MAP_KEY:", map_key)
-    return templates.TemplateResponse("individual_apt.html", {"request": request, "map_key": map_key})
+    user_name = None
+    if user_id is not None:
+        session = SessionLocal()
+        try:
+            user_obj = session.get(User, user_id)
+            if user_obj:
+                user_name = user_obj.name
+        finally:
+            session.close()
+
+    return templates.TemplateResponse("individual_apt.html", {"request": request, "map_key": map_key, "user_id": user_id, "user_name": user_name})
 
 @app.get("/search", response_class=HTMLResponse)
-def show_search(request: Request, q: str | None = None):
+def show_search(request: Request, q: str | None = None, user_id: int | None = None):
     map_key = os.getenv("GOOGLE_MAP_KEY")
     results = []
+    user_name = None
+
+    # if there's a user_id, try to load user's name for nav
+    if user_id is not None:
+        session = SessionLocal()
+        try:
+            user_obj = session.get(User, user_id)
+            if user_obj:
+                user_name = user_obj.name
+        finally:
+            session.close()
     if q:
         session = SessionLocal()
         try:
-            # Basic case-insensitive substring match on title
             results_objs = session.query(Listing).filter(Listing.title.ilike(f"%{q}%")).all()
             results = [
                 {
@@ -207,9 +226,46 @@ def show_search(request: Request, q: str | None = None):
             ]
         finally:
             session.close()
+
     return templates.TemplateResponse(
         "search_page.html",
-        {"request": request, "query": q or "", "results": results, "map_key": map_key}
+        {"request": request, "query": q or "", "results": results, "map_key": map_key, "user_id": user_id, "user_name": user_name}
+    )
+
+@app.get("/profile/{user_id}", response_class=HTMLResponse)
+def show_profile(request: Request, user_id: int):
+    """
+    Render a user's profile page by id and include that user's listings.
+    """
+    session = SessionLocal()
+    try:
+        user_obj = session.get(User, user_id)
+        if not user_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # convert user to a plain dict to avoid ORM lazy-loading after session close
+        user_data = {
+            "id": user_obj.id,
+            "name": user_obj.name,
+            "email": user_obj.email,
+        }
+
+         # load listings for this user
+        listings_objs = session.query(Listing).filter(Listing.lister == user_id).all()
+        listings_data = [
+            {
+                "id": l.id,
+                "title": l.title,
+                "city": l.city,
+                "cost_per_month": l.cost_per_month
+            } for l in listings_objs
+        ]
+    finally:
+        session.close()
+
+    return templates.TemplateResponse(
+        "profile.html",
+        {"request": request, "user": user_data, "listings": listings_data, "user_id": user_id, "user_name": user_data["name"]}
     )
 
 @app.get("/profile/{user_id}", response_class=HTMLResponse)

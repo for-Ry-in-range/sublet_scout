@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Sublet Scout{% endblock %}</title>
+
+    <!-- shared CSS for navbar + pages -->
+    <link rel="stylesheet" href="{{ url_for('static', path='homepage.css') }}">
+</head>
+<body>
+    <nav class="nav">
+        <ul>
+            <li>
+                {% if user_id %}
+                    <a href="{{ url_for('show_homepage') }}?user_id={{ user_id }}">Home</a>
+                {% else %}
+                    <a href="{{ url_for('show_homepage') }}">Home</a>
+                {% endif %}
+            </li>
+
+            <li>
+                {% if user_id %}
+                    <a href="{{ url_for('show_search') }}?user_id={{ user_id }}">Search</a>
+                {% else %}
+                    <a href="{{ url_for('show_search') }}">Search</a>
+                {% endif %}
+            </li>
+
+            <li>
+                {% if user_id %}
+                    <a href="{{ url_for('render_individual_apt') }}?user_id={{ user_id }}">Listings</a>
+                {% else %}
+                    <a href="{{ url_for('render_individual_apt') }}">Listings</a>
+                {% endif %}
+            </li>
+
+            {% if user_name and user_id %}
+                <li><a href="{{ url_for('show_profile', user_id=user_id) }}">Profile</a></li>
+            {% else %}
+                <li><a href="{{ url_for('show_login') }}">Profile</a></li>
+            {% endif %}
+
+            <!-- TODO: add messaging route -->
+            <li><a href="/messaging">Messages</a></li>
+
+            <li><a href="{{ url_for('show_login') }}">Login</a></li>
+        </ul>
+    </nav>
+
+    <!-- page-specific content will render here -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
