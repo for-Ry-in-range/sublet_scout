@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.booking_request import BookingRequest
 from app.schemas import BookingRequestStructure
 
-def get_booking_request_by_id(db: Session, booking_request_id: int):
+def get_booking_request_by_id(booking_request_id: int):
     br_data = db.query(BookingRequest).filter(BookingRequest.id == booking_request_id).first()
     if not br_data:
         return None
@@ -11,20 +11,35 @@ def get_booking_request_by_id(db: Session, booking_request_id: int):
         "subletter_id": br_data.subletter_id,
     }
 
-def create_booking_request(db: Session, br_data: dict):
-    new_br = BookingRequest(
-        listing_id=br_data.listing_id,
-        subletter_id=br_data.subletter_id,
-    )
-    db.add(new_br)
-    db.commit()
-    db.refresh(new_br)
-    return new_br
+def create_booking_request(br_data: dict):
+    session = SessionLocal()
+    try:
+        new_br = BookingRequest(
+            listing_id=br_data.listing_id,
+            subletter_id=br_data.subletter_id,
+        )
+        session.add(new_br)
+        session.commit()
+        session.refresh(new_listing) # Adds the id to new_br
+        return JSONResponse({"message": "Booking request added", "br": {"id": new_br.id}}, status_code=status.HTTP_201_CREATED)
+    finally:
+        session.close()
 
-def delete_booking_request(db: Session, br_id: int):
-    br = db.query(BookingRequest).filter(BookingRequest.id == br_id).first()
-    if not br:
-        return None
-    db.delete(br)
-    db.commit()
-    return {"message": "Deleted booking request with ID:": br_id}
+
+def delete_booking_request(br_id: int):
+    session = SessionLocal()
+    try:
+        br = session.query(BookingRequest).filter(BookingRequest.id == br_id).first()
+        if not br:
+            return JSONResponse(
+                {"detail": f"Booking request {br_id} not found"},
+                status_code=status.HTTP_404_NOT_FOUND
+            )
+        session.delete(br)
+        session.commit()
+        return JSONResponse(
+            {"message": "Deleted booking request", "br_id": br_id},
+            status_code=status.HTTP_200_OK
+        )
+    finally:
+        session.close()
