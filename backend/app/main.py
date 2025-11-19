@@ -161,15 +161,19 @@ async def login(request: Request):
 
 
 @app.get("/homepage", response_class=HTMLResponse)
-def show_homepage(request: Request, user_id: int | None = None):
-    session = SessionLocal()
+def show_homepage(request: Request, q: str | None = None, price: int | None = None, dates: str | None = None, user_id: int | None = None):
+    map_key = os.getenv("GOOGLE_MAP_KEY")
+    results = []
     user_name = None
+    session = SessionLocal()
     try:
+        # load user name for nav if user_id provided
         if user_id is not None:
             user_obj = session.get(User, user_id)
             if user_obj:
                 user_name = user_obj.name
 
+        # Always load some listings for the page (e.g., for future use)
         listings = session.query(Listing).all()
         listings_data = [
             {
@@ -179,12 +183,38 @@ def show_homepage(request: Request, user_id: int | None = None):
                 "cost_per_month": l.cost_per_month
             } for l in listings
         ]
+
+        # If a query or filters were provided, run a filtered search
+        if q or price or dates:
+            query = session.query(Listing)
+            if q:
+                q_like = f"%{q}%"
+                query = query.filter((Listing.title.ilike(q_like)) | (Listing.city.ilike(q_like)))
+            if price:
+                query = query.filter(Listing.cost_per_month <= price)
+            # dates parsing/logic may be implemented later; for now we ignore 'dates' or you can add date filters later
+            results_objs = query.all()
+            results = [
+                {
+                    "id": r.id,
+                    "title": r.title,
+                    "city": r.city,
+                    "cost_per_month": r.cost_per_month
+                } for r in results_objs
+            ]
     finally:
         session.close()
-    # include user_id so templates can emit links that preserve it
     return templates.TemplateResponse(
         "homepage.html",
-        {"request": request, "listings": listings_data, "user_name": user_name, "user_id": user_id}
+        {
+            "request": request,
+            "listings": listings_data,
+            "results": results,
+            "map_key": map_key,
+            "user_name": user_name,
+            "user_id": user_id,
+            "query": q or ""
+        }
     )
 
 @app.get("/individual_apt", response_class=HTMLResponse)
@@ -202,40 +232,18 @@ async def render_individual_apt(request: Request, user_id: int | None = None):
 
     return templates.TemplateResponse("individual_apt.html", {"request": request, "map_key": map_key, "user_id": user_id, "user_name": user_name})
 
+# deprecate later
 @app.get("/search", response_class=HTMLResponse)
-def show_search(request: Request, q: str | None = None, user_id: int | None = None):
-    map_key = os.getenv("GOOGLE_MAP_KEY")
-    results = []
-    user_name = None
-
-    # if there's a user_id, try to load user's name for nav
-    if user_id is not None:
-        session = SessionLocal()
-        try:
-            user_obj = session.get(User, user_id)
-            if user_obj:
-                user_name = user_obj.name
-        finally:
-            session.close()
+def show_search(q: str | None = None, user_id: int | None = None):
+    redirect_url = "/homepage"
+    params = []
     if q:
-        session = SessionLocal()
-        try:
-            results_objs = session.query(Listing).filter(Listing.title.ilike(f"%{q}%")).all()
-            results = [
-                {
-                    "id": r.id,
-                    "title": r.title,
-                    "city": r.city,
-                    "cost_per_month": r.cost_per_month
-                } for r in results_objs
-            ]
-        finally:
-            session.close()
-
-    return templates.TemplateResponse(
-        "search_page.html",
-        {"request": request, "query": q or "", "results": results, "map_key": map_key, "user_id": user_id, "user_name": user_name}
-    )
+        params.append(f"q={q}")
+    if user_id is not None:
+        params.append(f"user_id={user_id}")
+    if params:
+        redirect_url = f"{redirect_url}?{'&'.join(params)}"
+    return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
 
 @app.get("/profile/{user_id}", response_class=HTMLResponse)
 def show_profile(request: Request, user_id: int):
