@@ -232,19 +232,6 @@ async def render_individual_apt(request: Request, user_id: int | None = None):
 
     return templates.TemplateResponse("individual_apt.html", {"request": request, "map_key": map_key, "user_id": user_id, "user_name": user_name})
 
-# deprecate later
-@app.get("/search", response_class=HTMLResponse)
-def show_search(q: str | None = None, user_id: int | None = None):
-    redirect_url = "/homepage"
-    params = []
-    if q:
-        params.append(f"q={q}")
-    if user_id is not None:
-        params.append(f"user_id={user_id}")
-    if params:
-        redirect_url = f"{redirect_url}?{'&'.join(params)}"
-    return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
-
 @app.get("/profile/{user_id}", response_class=HTMLResponse)
 def show_profile(request: Request, user_id: int):
     """
