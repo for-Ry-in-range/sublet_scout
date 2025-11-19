@@ -159,64 +159,66 @@ async def login(request: Request):
     finally:
         session.close()
 
-
 @app.get("/homepage", response_class=HTMLResponse)
-def show_homepage(request: Request, q: str | None = None, price: int | None = None, dates: str | None = None, user_id: int | None = None):
+def show_homepage(
+    request: Request,
+    q: str | None = None,
+    price: float | None = None,
+    dates: str | None = None,
+    user_id: int | None = None
+):
     map_key = os.getenv("GOOGLE_MAP_KEY")
-    results = []
     user_name = None
+    listings_data = []
+
     session = SessionLocal()
     try:
-        # load user name for nav if user_id provided
         if user_id is not None:
             user_obj = session.get(User, user_id)
             if user_obj:
                 user_name = user_obj.name
 
-        # Always load some listings for the page (e.g., for future use)
-        listings = session.query(Listing).all()
-        listings_data = [
-            {
+        # Build query (simple filters for q and price)
+        query_stmt = session.query(Listing)
+        if q:
+            q_like = f"%{q}%"
+            query_stmt = query_stmt.filter(
+                (Listing.title.ilike(q_like)) |
+                (Listing.city.ilike(q_like)) |
+                (Listing.address.ilike(q_like))
+            )
+        if price:
+            query_stmt = query_stmt.filter(Listing.cost_per_month <= price)
+
+        results = query_stmt.all()
+        for l in results:
+            full_address = ", ".join(filter(None, [l.address, l.city, l.state, l.zip_code]))
+            listings_data.append({
                 "id": l.id,
                 "title": l.title,
+                "address": l.address,
                 "city": l.city,
-                "cost_per_month": l.cost_per_month
-            } for l in listings
-        ]
-
-        # If a query or filters were provided, run a filtered search
-        if q or price or dates:
-            query = session.query(Listing)
-            if q:
-                q_like = f"%{q}%"
-                query = query.filter((Listing.title.ilike(q_like)) | (Listing.city.ilike(q_like)))
-            if price:
-                query = query.filter(Listing.cost_per_month <= price)
-            # dates parsing/logic may be implemented later; for now we ignore 'dates' or you can add date filters later
-            results_objs = query.all()
-            results = [
-                {
-                    "id": r.id,
-                    "title": r.title,
-                    "city": r.city,
-                    "cost_per_month": r.cost_per_month
-                } for r in results_objs
-            ]
+                "state": l.state,
+                "zip_code": l.zip_code,
+                "full_address": full_address,
+                "cost_per_month": l.cost_per_month or 0
+            })
     finally:
         session.close()
+
     return templates.TemplateResponse(
         "homepage.html",
         {
             "request": request,
             "listings": listings_data,
-            "results": results,
             "map_key": map_key,
             "user_name": user_name,
             "user_id": user_id,
-            "query": q or ""
+            "query": q or "",
+            "price": price or "",
+            "dates": dates or ""
         }
     )
-
 @app.get("/individual_apt", response_class=HTMLResponse)
 async def render_individual_apt(request: Request, user_id: int | None = None):
     map_key = os.getenv("GOOGLE_MAP_KEY")
