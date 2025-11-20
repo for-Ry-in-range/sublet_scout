@@ -38,6 +38,9 @@ var listings = [
     id: {{ l.id }},
     title: "{{ l.title|e }}",
     address: "{{ l.full_address|e }}",
+    full_address: "{{ l.full_address|e }}",
+    latitude: {{ l.latitude if l.latitude is not none else "null" }},
+    longitude: {{ l.longitude if l.longitude is not none else "null" }},
     cost_per_month: {{ l.cost_per_month }}
   }{% if not loop.last %},{% endif %}
 {% endfor %}
@@ -60,38 +63,22 @@ function initMap() {
     center: nyc
   });
 
-  var geocoder = new google.maps.Geocoder();
-
-  // Optionally place a center marker
   new google.maps.Marker({ position: nyc, map: map });
 
-  // Geocode each listing address and place a marker.
-  // Use a small delay between requests to reduce geocoding throttling.
-  listings.forEach(function(item, i) {
-    setTimeout(function() {
-      if (!item.address) return;
-      geocoder.geocode({ address: item.address }, function(results, status) {
-        if (status === 'OK' && results[0]) {
-          var loc = results[0].geometry.location;
-          var marker = new google.maps.Marker({
-            map: map,
-            position: loc,
-            title: item.title
-          });
-
-          var content = '<div style="min-width:180px;">' +
-                        '<strong>' + escapeHtml(item.title) + '</strong>' +
-                        '<div>$' + item.cost_per_month + ' / month</div>' +
-                        '<div style="font-size:90%;">' + escapeHtml(item.address) + '</div>' +
-                        '</div>';
-
-          var info = new google.maps.InfoWindow({ content: content });
-          marker.addListener('click', function() { info.open(map, marker); });
-        } else {
-          console.warn('Geocode failed for:', item.address, status);
-        }
+  listings.forEach(function(item) {
+    if (typeof item.latitude === 'number' && typeof item.longitude === 'number') {
+      var pos = { lat: item.latitude, lng: item.longitude };
+      var marker = new google.maps.Marker({
+        map: map,
+        position: pos,
+        title: item.title
       });
-    }, i * 200); // 200ms spacing between geocode calls
+      var content = '<div><strong>' + (item.title||'') + '</strong>' +
+                    '<div>$' + (item.cost_per_month||'') + ' / month</div>' +
+                    '<div style="font-size:90%;">' + (item.full_address||'') + '</div></div>';
+      var info = new google.maps.InfoWindow({ content: content });
+      marker.addListener('click', function(){ info.open(map, marker); });
+    }
   });
 }
 </script>

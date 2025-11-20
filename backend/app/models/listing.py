@@ -19,5 +19,7 @@ class Listing(Base):
     state = Column(String)
     zip_code = Column(String)  # String just in case there's leading zeros
     amenities = Column(String)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     lister_user = relationship("User", back_populates="listings")

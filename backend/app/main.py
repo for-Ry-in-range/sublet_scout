@@ -201,7 +201,9 @@ def show_homepage(
                 "state": l.state,
                 "zip_code": l.zip_code,
                 "full_address": full_address,
-                "cost_per_month": l.cost_per_month or 0
+                "cost_per_month": l.cost_per_month or 0,
+                "latitude": l.latitude,
+                "longitude": l.longitude
             })
     finally:
         session.close()
