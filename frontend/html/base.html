@@ -18,14 +18,6 @@
                     <a href="{{ url_for('show_homepage') }}">Home</a>
                 {% endif %}
             </li>
-            <li>
-                {% if user_id %}
-                    <a href="{{ url_for('render_individual_apt') }}?user_id={{ user_id }}">Listings</a>
-                {% else %}
-                    <a href="{{ url_for('render_individual_apt') }}">Listings</a>
-                {% endif %}
-            </li>
-
             {% if user_name and user_id %}
                 <li><a href="{{ url_for('show_profile', user_id=user_id) }}">Profile</a></li>
             {% else %}
