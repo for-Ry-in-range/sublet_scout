@@ -317,15 +317,15 @@ def get_search_results(filters: SearchFilterStructure):
     session = SessionLocal()
     try:
         query = session.query(Listing)  # Initialize query for the Listing table
-        if filters.cost_per_month:
+        if filters.cost_per_month is not None:
             query = query.filter(Listing.cost_per_month <= filters.cost_per_month)
-        if filters.bedrooms_available:
+        if filters.bedrooms_available is not None:
             query = query.filter(Listing.bedrooms_available >= filters.bedrooms_available)
-        if filters.bathrooms:
+        if filters.bathrooms is not None:
             query = query.filter(Listing.bathrooms >= filters.bathrooms)
-        if filters.available_start_date:
+        if filters.available_start_date is not None:
             query = query.filter(Listing.available_start_date <= filters.available_start_date)
-        if filters.available_end_date:
+        if filters.available_end_date is not None:
             query = query.filter(Listing.available_end_date >= filters.available_end_date)
         results = query.all()
         return results

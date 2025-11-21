@@ -2,6 +2,8 @@ from sqlalchemy.orm import Session
 from app.models.listing import Listing
 from app.schemas import ListingStructure
 from app.database import SessionLocal
+from fastapi import status
+from fastapi.responses import JSONResponse
 
 def get_listing_by_id(db: Session, listing_id: int):
     listing_data = db.query(Listing).filter(Listing.id == listing_id).first()
