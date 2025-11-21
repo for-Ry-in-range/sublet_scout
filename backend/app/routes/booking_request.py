@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from app.crud.booking_request_crud import *
 from app.schemas import *
 
 router = APIRouter()
 
-@router.get("/booking_request/{booking_request_id}")
+@router.get("/booking_requests/{booking_request_id}")
 def read_booking_request_endpoint(booking_request_id: int):
     try:
         res = get_booking_request_by_id(booking_request_id)
@@ -14,7 +14,7 @@ def read_booking_request_endpoint(booking_request_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/create_booking_request")
+@router.post("/booking_requests")
 def create_booking_request_endpoint(request_data: BookingRequestStructure):
     try:
         res = create_booking_request(request_data)
@@ -22,7 +22,7 @@ def create_booking_request_endpoint(request_data: BookingRequestStructure):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/delete_booking_request/{booking_request_id}")
+@router.delete("/booking_requests/{booking_request_id}")
 def delete_booking_request_endpoint(booking_request_id: int):
     try:
         res = delete_booking_request(booking_request_id)

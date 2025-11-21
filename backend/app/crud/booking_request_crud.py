@@ -1,17 +1,26 @@
 from sqlalchemy.orm import Session
 from app.models.booking_request import BookingRequest
 from app.schemas import BookingRequestStructure
+from app.database import SessionLocal
+from fastapi import status
+from fastapi.responses import JSONResponse
 
 def get_booking_request_by_id(booking_request_id: int):
-    br_data = db.query(BookingRequest).filter(BookingRequest.id == booking_request_id).first()
-    if not br_data:
-        return None
-    return {
+    session = SessionLocal()
+    try:
+        query = session.query(BookingRequest)
+        br_data = query.filter(BookingRequest.id == booking_request_id).first()
+        if not br_data:
+            return None
+        return {
         "listing_id": br_data.listing_id,
         "subletter_id": br_data.subletter_id,
     }
+    finally:
+        session.close()
 
-def create_booking_request(br_data: dict):
+        
+def create_booking_request(br_data: BookingRequestStructure):
     session = SessionLocal()
     try:
         new_br = BookingRequest(
@@ -20,7 +29,7 @@ def create_booking_request(br_data: dict):
         )
         session.add(new_br)
         session.commit()
-        session.refresh(new_listing) # Adds the id to new_br
+        session.refresh(new_br) # Adds the id to new_br
         return JSONResponse({"message": "Booking request added", "br": {"id": new_br.id}}, status_code=status.HTTP_201_CREATED)
     finally:
         session.close()
