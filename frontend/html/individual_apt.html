@@ -1,73 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cozy Bedroom in Times Square | Sublet Scout</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='individual_apt.css') }}">
-    <script src="https://maps.googleapis.com/maps/api/js?key={{map_key}}"></script>
-</head>
-<body>
-    <nav>
-        <h1>Sublet Scout</h1>
-        <div class="nav-links">
-            <a href="homepage.html">Home</a>
-            <a href="search_page.html">Search</a>
-            <a href="profile.html">Profile</a>
-            <a href="login.html">Login</a>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <div class="container">
-        <h1>Cozy Bedroom in Times Square</h1>
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', path='individual_apt.css') }}">
+<script src="https://maps.googleapis.com/maps/api/js?key={{ map_key }}"></script>
 
-        <div class="apt-images">
-            <img src="../src/images/ee6a6e4d-28f9-43a1-b49c-39b2c71febb4.jpg" alt="Apt Image 1">
-            <img src="../src/images/1d059ed9-0c78-4d6f-a3c7-c1adde9d152e.jpg" alt="Apt Image 2">
-            <img src="../src/images/933b99ab-06a6-4d12-a7cc-646d460d2983.jpg" alt="Apt Image 3">
-            <img src="../src/images/0d4c7668-9db9-4f09-b495-2e8ae8c5ee8d.jpg" alt="Apt Image 4">
-        </div>
+<div class="container" style="padding-top: 6.0rem;">
+    <h1>{{ apt.title }}</h1>
 
-        <div class="details">
-            <p><strong>Bedrooms Available:</strong> 1</p>
-            <p><strong>Total number of Rooms:</strong> 3</p>
-            <p><strong>Bedrooms in Use:</strong> 2</p>
-            <p><strong>Bathrooms:</strong> 1</p>
-            <p><strong>Price:</strong> $2,200/month</p>
-            <p><strong>Available:</strong> May 18, 2026 - August 21, 2026</p>
-        </div>
+    <!-- Details -->
+    <div class="details">
+        <p><strong>Bedrooms Available:</strong> {{ apt.bedrooms_available }}</p>
+        <p><strong>Total Rooms:</strong> {{ apt.total_rooms }}</p>
+        <p><strong>Bedrooms In Use:</strong> {{ apt.bedrooms_in_use }}</p>
+        <p><strong>Bathrooms:</strong> {{ apt.bathrooms }}</p>
+        <p><strong>Price:</strong> ${{ apt.price }}/month</p>
 
-        <div class="map">
-            <h2>Location</h2>
-            <div id="google-map"></div>
-        </div>
-
-        <h2>Amenities</h2>
-        <ul>
-            <li>Kitchen</li>
-            <li>Wifi</li>
-            <li>Parking garage</li>
-            <li>HD TV with Apple TV, Amazon Prime Video, Netflix</li>
-            <li>Central air conditioning</li>
-            <li>Hair dryer</li>
-            <li>Refrigerator</li>
-        </ul>
+        <p><strong>Available:</strong> 
+            {{ apt.start_date }} – {{ apt.end_date }}
+        </p>
     </div>
 
-    <script>
-        function initMap() {
-            const location = { lat: 40.758896, lng: -73.985130 };
-            const map = new google.maps.Map(document.getElementById("google-map"), {
-                zoom: 14,
-                center: location,
-            });
-            new google.maps.Marker({
-                position: location,
-                map: map,
-            });
-        }
-        window.onload = initMap;
-    </script>
-</body>
-</html>
+    <!-- Map -->
+    <div class="map">
+        <h2>Location</h2>
+        <div id="google-map"></div>
+    </div>
 
+    <!-- Amenities -->
+    <h2>Amenities</h2>
+    <ul>
+        {% for amenity in apt.amenities %}
+            <li>{{ amenity }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    function initMap() {
+        const location = { lat: {{ apt.latitude }}, lng: {{ apt.longitude }} };
+        const map = new google.maps.Map(document.getElementById("google-map"), {
+            zoom: 14,
+            center: location,
+        });
+        new google.maps.Marker({
+            position: location,
+            map: map,
+        });
+    }
+    window.onload = initMap;
+</script>
+{% endblock %}

@@ -20,7 +20,7 @@
                 {% for l in listings %}
                     <li>
                         {{ l.title }} – ${{ l.cost_per_month }}
-                        <a href="{{ url_for('render_individual_apt') }}{% if user_id %}?user_id={{ user_id }}{% endif %}">View</a>
+                        <a href="/individual_apt/{{ l.id }}?user_id={{ user.id }}">View</a>
                     </li>
                 {% endfor %}
             </ul>

@@ -221,20 +221,60 @@ def show_homepage(
             "dates": dates or ""
         }
     )
-@app.get("/individual_apt", response_class=HTMLResponse)
-async def render_individual_apt(request: Request, user_id: int | None = None):
-    map_key = os.getenv("GOOGLE_MAP_KEY")
-    user_name = None
-    if user_id is not None:
-        session = SessionLocal()
-        try:
-            user_obj = session.get(User, user_id)
-            if user_obj:
-                user_name = user_obj.name
-        finally:
-            session.close()
 
-    return templates.TemplateResponse("individual_apt.html", {"request": request, "map_key": map_key, "user_id": user_id, "user_name": user_name})
+@app.get("/individual_apt/{listing_id}", response_class=HTMLResponse)
+def individual_apt(request: Request, listing_id: int, user_id: int | None = None):
+    session = SessionLocal()
+    try:
+        listing = session.get(Listing, listing_id)
+        if not listing:
+            raise HTTPException(status_code=404, detail="Listing not found")
+
+        # TODO: implement images later
+        images = []
+
+        apt = {
+            "id": listing.id,
+            "title": listing.title,
+            "address": listing.address,
+            "city": listing.city,
+            "state": listing.state,
+            "zip_code": listing.zip_code,
+            "latitude": listing.latitude,
+            "longitude": listing.longitude,
+            "bedrooms_available": listing.bedrooms_available,
+            "total_rooms": listing.total_rooms,
+            "bedrooms_in_use": listing.bedrooms_in_use,
+            "bathrooms": listing.bathrooms,
+            "price": listing.cost_per_month,
+            "start_date": listing.available_start_date,
+            "end_date": listing.available_end_date,
+            "amenities": listing.amenities.split(",") if listing.amenities else [],
+            "images": images
+        }
+
+        # Get name for navbar
+        user_name = None
+        if user_id:
+            user = session.get(User, user_id)
+            if user:
+                user_name = user.name
+
+    finally:
+        session.close()
+
+    map_key = os.getenv("GOOGLE_MAP_KEY")
+
+    return templates.TemplateResponse(
+        "individual_apt.html",
+        {
+            "request": request,
+            "apt": apt,
+            "map_key": map_key,
+            "user_id": user_id,
+            "user_name": user_name
+        }
+    )
 
 @app.get("/profile/{user_id}", response_class=HTMLResponse)
 def show_profile(request: Request, user_id: int):
@@ -271,39 +311,6 @@ def show_profile(request: Request, user_id: int):
         "profile.html",
         {"request": request, "user": user_data, "listings": listings_data, "user_id": user_id, "user_name": user_data["name"]}
     )
-
-@app.get("/profile/{user_id}", response_class=HTMLResponse)
-def show_profile(request: Request, user_id: int):
-    """
-    Render a user's profile page by id and include that user's listings.
-    """
-    session = SessionLocal()
-    try:
-        user_obj = session.get(User, user_id)
-        if not user_obj:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        # convert user to a plain dict to avoid ORM lazy-loading after session close
-        user_data = {
-            "id": user_obj.id,
-            "name": user_obj.name,
-            "email": user_obj.email,
-        }
-
-        # load listings for this user
-        listings_objs = session.query(Listing).filter(Listing.lister == user_id).all()
-        listings_data = [
-            {
-                "id": l.id,
-                "title": l.title,
-                "city": l.city,
-                "cost_per_month": l.cost_per_month
-            } for l in listings_objs
-        ]
-    finally:
-        session.close()
-
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user_data, "listings": listings_data})
 
 @app.get("/search_results")
 def get_search_results(filters: SearchFilterStructure):
