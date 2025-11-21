@@ -73,9 +73,19 @@ function initMap() {
         position: pos,
         title: item.title
       });
-      var content = '<div><strong>' + (item.title||'') + '</strong>' +
-                    '<div>$' + (item.cost_per_month||'') + ' / month</div>' +
-                    '<div style="font-size:90%;">' + (item.full_address||'') + '</div></div>';
+     var content =
+      '<div>' +
+        '<strong>' +
+          '<a href="/individual_apt/' + item.id + '?user_id={{ user_id }}"' +
+            'style="text-decoration:none;color:#1a73e8;">' +
+            escapeHtml(item.title) +
+          '</a>' +
+        '</strong>' +
+        '<div>$' + (item.cost_per_month||'') + ' / month</div>' +
+        '<div style="font-size:90%;">' + (item.full_address||'') + '</div>' +
+      '</div>';
+
+
       var info = new google.maps.InfoWindow({ content: content });
       marker.addListener('click', function(){ info.open(map, marker); });
     }
