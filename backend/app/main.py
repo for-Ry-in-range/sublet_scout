@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
-import hashlib, hmac, binascii, os
+import hashlib, hmac, binascii, os, requests
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
@@ -324,3 +324,81 @@ def get_search_results(filters: SearchFilterStructure):
         return results
     finally:
         session.close()
+
+@app.get("/create_listing", response_class=HTMLResponse)
+def render_create_listing(request: Request, user_id: int):
+    return templates.TemplateResponse(
+        "create_listing.html",
+        {"request": request, "user_id": user_id}
+    )
+
+@app.post("/create_listing")
+async def create_listing(request: Request):
+    form = await request.form()
+
+    user_id = int(form.get("user_id"))
+    title = form.get("title")
+    address = form.get("address")
+    city = form.get("city")
+    state = form.get("state")
+    zip_code = form.get("zip_code")
+    bedrooms_available = int(form.get("bedrooms_available"))
+    total_rooms = form.get("total_rooms")
+    bedrooms_in_use = form.get("bedrooms_in_use")
+    bathrooms = int(form.get("bathrooms"))
+    cost_per_month = float(form.get("cost_per_month"))
+    amenities = form.get("amenities")
+    available_start_date = form.get("available_start_date")
+    available_end_date = form.get("available_end_date")
+
+    total_rooms = int(total_rooms) if total_rooms else None
+    bedrooms_in_use = int(bedrooms_in_use) if bedrooms_in_use else None
+
+    # ---- GOOGLE GEOCODING ----
+    map_key = os.getenv("GOOGLE_MAP_KEY")
+    full_address = f"{address}, {city}, {state} {zip_code}"
+
+    geo_url = (
+        "https://maps.googleapis.com/maps/api/geocode/json"
+        f"?address={full_address}&key={map_key}"
+    )
+
+    geo_response = requests.get(geo_url).json()
+
+    if geo_response["status"] != "OK":
+        raise HTTPException(status_code=400, detail="Invalid address - could not geocode")
+
+    location = geo_response["results"][0]["geometry"]["location"]
+    latitude = location["lat"]
+    longitude = location["lng"]
+
+    # ---- INSERT INTO DATABASE ----
+    session = SessionLocal()
+    try:
+        new_listing = Listing(
+            title=title,
+            lister=user_id,
+            address=address,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            bedrooms_available=bedrooms_available,
+            total_rooms=total_rooms,
+            bedrooms_in_use=bedrooms_in_use,
+            bathrooms=bathrooms,
+            cost_per_month=cost_per_month,
+            amenities=amenities,
+            available_start_date=available_start_date or None,
+            available_end_date=available_end_date or None,
+            latitude=latitude,
+            longitude=longitude
+        )
+        session.add(new_listing)
+        session.commit()
+    finally:
+        session.close()
+
+    return RedirectResponse(
+        url=f"/profile/{user_id}",
+        status_code=303
+    )
