@@ -1,3 +1,4 @@
+# Resend + token utilities for email verification
 import os
 import bcrypt
 import resend
@@ -22,12 +23,13 @@ def make_verification_link(email: str, name: str | None, password_hash: str) -> 
 
 def send_verification_email(to_email: str, verify_url: str):
     html = f"""
-      <div style="font-family:system-ui,-apple-system,Arial,sans-serif">
-        <h2>Verify your email</h2>
-        <p>Click the link below to verify your email and complete signup:</p>
-        <p><a href="{verify_url}">{verify_url}</a></p>
-        <p>This link expires in 24 hours.</p>
-      </div>
+    <div style="font-family:system-ui,-apple-system,Arial,sans-serif">
+      <h2>Verify your email</h2>
+      <p>Click the link below to finish creating your account:</p>
+      <p><a href="{verify_url}">{verify_url}</a></p>
+      <p>This link expires in 24 hours.</p>
+      <p>If you did not request this, ignore this message.</p>
+    </div>
     """
     return resend.Emails.send({
         "from": FROM_EMAIL,

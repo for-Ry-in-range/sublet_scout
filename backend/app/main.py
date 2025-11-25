@@ -12,11 +12,11 @@ from app.routes.listing import router as listing_router
 from app.routes.booking_request import router as br_router
 from pydantic import BaseModel, EmailStr
 from itsdangerous import BadSignature, SignatureExpired
+import bcrypt
 from app.supabase_client import supabase
 from app.email_verification import (
     hash_password, make_verification_link, send_verification_email, serializer
 )
-import bcrypt
 
 load_dotenv()
 
@@ -47,29 +47,9 @@ def list_users():
     return result
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/login", response_class=HTMLResponse)
 def show_login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
-
-def hash_password(password: str, iterations: int = 100_000) -> str:
-    """Return a string storing iterations, salt, and hash so we can verify later."""
-    salt = os.urandom(16)
-    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
-    return f"{iterations}${binascii.hexlify(salt).decode()}${binascii.hexlify(dk).decode()}"
-
-import hmac  # add this at the top
-
-def verify_password(stored: str, password: str) -> bool:
-    """Verify password against stored string created by hash_password."""
-    try:
-        iterations_str, salt_hex, hash_hex = stored.split("$")
-        iterations = int(iterations_str)
-        salt = binascii.unhexlify(salt_hex)
-        expected = binascii.unhexlify(hash_hex)
-        dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
-        return hmac.compare_digest(dk, expected)
-    except Exception:
-        return False
-
 
 def is_edu(email: str) -> bool:
     return isinstance(email, str) and email.lower().endswith(".edu")
@@ -87,7 +67,7 @@ async def signup(payload: SignupPayload):
     if len(payload.password) < 8:
         raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
 
-    # If already verified/user exists, return generic success (avoid user enumeration)
+    # If already verified/user exists -> generic success
     existing = supabase.table("users").select("id").eq("email", payload.email).limit(1).execute()
     if existing.data:
         return {"ok": True, "message": "If the account exists, a verification email has been sent."}
@@ -101,12 +81,12 @@ async def signup(payload: SignupPayload):
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Failed to send verification email: {e}")
 
-    return {"ok": True, "message": "If the account was created, a verification email has been sent."}
+    return {"ok": True, "message": "Check your email for a verification link."}
 
 @app.get("/verify", response_class=HTMLResponse)
 async def verify(token: str):
     try:
-        data = serializer.loads(token, max_age=60 * 60 * 24)  # 24h expiry
+        data = serializer.loads(token, max_age=60 * 60 * 24)
         email = data["email"]
         name = data.get("name") or ""
         password_hash = data["password_hash"]
@@ -115,7 +95,6 @@ async def verify(token: str):
     except BadSignature:
         raise HTTPException(status_code=400, detail="Invalid verification link")
 
-    # Insert only if not already present
     exists = supabase.table("users").select("id").eq("email", email).limit(1).execute()
     if not exists.data:
         supabase.table("users").insert({
@@ -125,10 +104,10 @@ async def verify(token: str):
         }).execute()
 
     return HTMLResponse("""
-      <html><body style="font-family:system-ui">
-        <h2>Email verified</h2>
-        <p>Your account has been created. You can now <a href="/login">log in</a>.</p>
-      </body></html>
+    <html><body style="font-family:system-ui">
+      <h2>Email verified</h2>
+      <p>Your account has been created. You can now <a href="/">log in</a>.</p>
+    </body></html>
     """)
 
 @app.post("/login")
@@ -272,4 +251,56 @@ def render_create_listing(request: Request, user_id: int):
         "create_listing.html",
         {"request": request, "user_id": user_id}
     )
+
+@app.post("/create_listing")
+def create_listing(
+    request: Request,
+    user_id: int = Form(...),
+    title: str = Form(...),
+    bedrooms_available: int = Form(...),
+    total_rooms: int = Form(...),
+    bedrooms_in_use: int = Form(...),
+    bathrooms: int = Form(...),
+    cost_per_month: float = Form(...),
+    available_start_date: str = Form(...),
+    available_end_date: str = Form(...),
+    address: str = Form(...),
+    city: str = Form(...),
+    state: str = Form(...),
+    zip_code: str = Form(...),
+    amenities: str = Form(""),
+    latitude: float | None = Form(None),
+    longitude: float | None = Form(None),
+):
+    session = SessionLocal()
+    try:
+        # Basic validation
+        if cost_per_month < 0:
+            raise HTTPException(status_code=400, detail="Invalid price")
+
+        listing = Listing(
+            title=title,
+            lister=user_id,
+            bedrooms_available=bedrooms_available,
+            total_rooms=total_rooms,
+            bedrooms_in_use=bedrooms_in_use,
+            bathrooms=bathrooms,
+            cost_per_month=cost_per_month,
+            available_start_date=available_start_date,
+            available_end_date=available_end_date,
+            address=address,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            amenities=amenities,
+            latitude=latitude,
+            longitude=longitude,
+        )
+        session.add(listing)
+        session.commit()
+        session.refresh(listing)
+    finally:
+        session.close()
+
+    return RedirectResponse(url=f"/profile/{user_id}", status_code=303)
 

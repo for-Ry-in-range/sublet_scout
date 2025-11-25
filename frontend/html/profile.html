@@ -15,24 +15,19 @@
         {% endif %}
 
         <h2>Your Listings</h2>
-        {% if listings %}
+        {% if listings and listings|length > 0 %}
             <ul>
                 {% for l in listings %}
                     <li>
-                        {{ l.title }} – ${{ l.cost_per_month }}
-                        <a href="/individual_apt/{{ l.id }}?user_id={{ user.id }}">View</a>
+                        <strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}
+                        <a href="/listing/{{ l.id }}">View</a>
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No listings found.</p>
+            <p>No listings yet.</p>
         {% endif %}
 
-        <h2>Account Actions</h2>
-        <ul>
-            <li><a href="#">Edit Profile</a></li>
-            <li><a href="/create_listing?user_id={{ user_id }}">Add New Listing</a></li>
-            <li><a href="{{ url_for('show_login') }}">Logout</a></li>
-        </ul>
+        <p><a href="/create_listing?user_id={{ user.id }}">Add New Listing</a></p>
     </div>
 {% endblock %}
