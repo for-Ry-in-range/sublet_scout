@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, status
+from fastapi import FastAPI, Request, HTTPException, status, Form
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10,7 +10,13 @@ from app.models.listing import Listing
 from app.schemas import SearchFilterStructure
 from app.routes.listing import router as listing_router
 from app.routes.booking_request import router as br_router
-#from app.routes import apartments
+from pydantic import BaseModel, EmailStr
+from itsdangerous import BadSignature, SignatureExpired
+from app.supabase_client import supabase
+from app.email_verification import (
+    hash_password, make_verification_link, send_verification_email, serializer
+)
+import bcrypt
 
 load_dotenv()
 
@@ -65,99 +71,80 @@ def verify_password(stored: str, password: str) -> bool:
         return False
 
 
+def is_edu(email: str) -> bool:
+    return isinstance(email, str) and email.lower().endswith(".edu")
+
+class SignupPayload(BaseModel):
+    email: EmailStr
+    password: str
+    first_name: str | None = None
+    last_name: str | None = None
+
 @app.post("/signup")
-async def signup(request: Request):
-    """
-    Accepts JSON { email, password } and creates a user if:
-      - email ends with .edu
-      - password length >= 8
-      - email unique
-    Returns JSON 201 on success or a JSON error message.
-    """
-    data = {}
-    # Accept JSON body (frontend signup uses fetch JSON)
+async def signup(payload: SignupPayload):
+    if not is_edu(payload.email):
+        raise HTTPException(status_code=400, detail="Email must end with .edu")
+    if len(payload.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+
+    # If already verified/user exists, return generic success (avoid user enumeration)
+    existing = supabase.table("users").select("id").eq("email", payload.email).limit(1).execute()
+    if existing.data:
+        return {"ok": True, "message": "If the account exists, a verification email has been sent."}
+
+    name = " ".join(filter(None, [payload.first_name, payload.last_name])) or None
+    pwd_hash = hash_password(payload.password)
+    verify_url = make_verification_link(payload.email, name, pwd_hash)
+
     try:
-        data = await request.json()
-    except Exception:
-        # Not a JSON body
-        return JSONResponse({"message": "Expected JSON body"}, status_code=status.HTTP_400_BAD_REQUEST)
+        send_verification_email(payload.email, verify_url)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to send verification email: {e}")
 
-    email = (data.get("email") or "").strip().lower()
-    first_name = (data.get("first_name") or "").strip()
-    last_name = (data.get("last_name") or "").strip()
-    password = data.get("password") or ""
+    return {"ok": True, "message": "If the account was created, a verification email has been sent."}
 
-    if not email.endswith(".edu"):
-        return JSONResponse({"message": "Email must end with .edu"}, status_code=status.HTTP_400_BAD_REQUEST)
-    if not first_name:
-        return JSONResponse({"message": "First name is required"}, status_code=status.HTTP_400_BAD_REQUEST)
-    if not last_name:
-        return JSONResponse({"message": "Last name is required"}, status_code=status.HTTP_400_BAD_REQUEST)
-    if len(password) < 8:
-        return JSONResponse({"message": "Password must be at least 8 characters"}, status_code=status.HTTP_400_BAD_REQUEST)
-
-    full_name = f"{first_name} {last_name}"
-
-    session = SessionLocal()
+@app.get("/verify", response_class=HTMLResponse)
+async def verify(token: str):
     try:
-        # Check uniqueness
-        existing = session.query(User).filter(User.email == email).first()
-        if existing:
-            return JSONResponse({"message": "Email already registered"}, status_code=status.HTTP_409_CONFLICT)
+        data = serializer.loads(token, max_age=60 * 60 * 24)  # 24h expiry
+        email = data["email"]
+        name = data.get("name") or ""
+        password_hash = data["password_hash"]
+    except SignatureExpired:
+        raise HTTPException(status_code=400, detail="Verification link expired")
+    except BadSignature:
+        raise HTTPException(status_code=400, detail="Invalid verification link")
 
-        # Hash password
-        password_hash = hash_password(password)
+    # Insert only if not already present
+    exists = supabase.table("users").select("id").eq("email", email).limit(1).execute()
+    if not exists.data:
+        supabase.table("users").insert({
+            "name": name,
+            "email": email,
+            "password_hash": password_hash
+        }).execute()
 
-        new_user = User(name=full_name, email=email, password_hash=password_hash)
-        session.add(new_user)
-        session.commit()
-        session.refresh(new_user)
-
-        return JSONResponse({"message": "Account created", "user": {"id": new_user.id, "email": new_user.email}}, status_code=status.HTTP_201_CREATED)
-    finally:
-        session.close()
+    return HTMLResponse("""
+      <html><body style="font-family:system-ui">
+        <h2>Email verified</h2>
+        <p>Your account has been created. You can now <a href="/login">log in</a>.</p>
+      </body></html>
+    """)
 
 @app.post("/login")
-async def login(request: Request):
-    """
-    Accepts form POST (from your current login form) or JSON {email, password}.
-    On successful auth, redirects to /homepage. On failure returns 401 JSON or a simple message.
-    """
-    # Try JSON first
-    email = password = None
-    content_type = request.headers.get("content-type", "")
-    if "application/json" in content_type:
-        try:
-            body = await request.json()
-            email = (body.get("email") or "").strip().lower()
-            password = body.get("password") or ""
-        except Exception:
-            return JSONResponse({"message": "Invalid JSON"}, status_code=status.HTTP_400_BAD_REQUEST)
-    else:
-        # fallback to form data (your login form submits form POST)
-        form = await request.form()
-        email = (form.get("email") or "").strip().lower()
-        password = form.get("password") or ""
+async def login(email: str = Form(...), password: str = Form(...)):
+    if not is_edu(email):
+        raise HTTPException(status_code=400, detail="Email must end with .edu")
 
+    resp = supabase.table("users").select("id,password_hash").eq("email", email).limit(1).execute()
+    if not resp.data:
+        raise HTTPException(status_code=401, detail="Invalid credentials or email not verified")
 
-    if not email or not password:
-        return JSONResponse({"message": "Email and password required"}, status_code=status.HTTP_400_BAD_REQUEST)
+    row = resp.data[0]
+    if not bcrypt.checkpw(password.encode("utf-8"), row["password_hash"].encode("utf-8")):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    session = SessionLocal()
-    try:
-        user_obj = session.query(User).filter(User.email == email).first()
-        if not user_obj:
-            # keep response generic in real apps; for dev we return message
-            return JSONResponse({"message": "User doesn't exist"}, status_code=status.HTTP_401_UNAUTHORIZED)
-
-        if not verify_password(user_obj.password_hash, password):
-            return JSONResponse({"message": "Incorrect password"}, status_code=status.HTTP_401_UNAUTHORIZED)
-
-        # Auth succeeded. For now we simply redirect to homepage.
-        # NOTE: no session/cookie is set — add session or JWT later if you want persistent login.
-        return RedirectResponse(url=f"/homepage?user_id={user_obj.id}", status_code=status.HTTP_303_SEE_OTHER)
-    finally:
-        session.close()
+    return JSONResponse({"ok": True, "message": "Logged in"})
 
 @app.get("/homepage", response_class=HTMLResponse)
 def show_homepage(
