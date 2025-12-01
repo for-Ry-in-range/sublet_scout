@@ -1,42 +1,178 @@
-from fastapi import FastAPI, Request, HTTPException, status, Form
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
-import hashlib, hmac, binascii, os, requests
+load_dotenv()
+
+from starlette.middleware.sessions import SessionMiddleware
+from fastapi import FastAPI, Request, HTTPException, Form
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles  # ADD
+import os, bcrypt
+
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.models.listing import Listing
-from app.schemas import SearchFilterStructure
-from app.routes.listing import router as listing_router
-from app.routes.booking_request import router as br_router
-from pydantic import BaseModel, EmailStr
-from itsdangerous import BadSignature, SignatureExpired
-import bcrypt
-from app.supabase_client import supabase
-from app.email_verification import (
-    hash_password, make_verification_link, send_verification_email, serializer
-)
+from app.schemas import SearchFilterStructure  # FIX: add this
 
-load_dotenv()
-
-# Create tables
+# Create tables (uses DATABASE_URL from .env)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-#app.include_router(apartments.router)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
-templates = Jinja2Templates(directory=os.path.join(FRONTEND_DIR, "html"))
-app.mount("/static", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="static")
+# Sessions (cookie-based)
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me"), same_site="lax")
 
-app.include_router(listing_router)
-app.include_router(br_router)
+# Templates (point to frontend/html)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
+FRONTEND_HTML = os.path.join(BASE_DIR, "..", "frontend", "html")
+templates = Jinja2Templates(directory=FRONTEND_HTML)
+
+# Mount static files so url_for('static', path='homepage.css') works
+STATIC_DIR = os.path.join(BASE_DIR, "..", "frontend", "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+def is_edu(email: str) -> bool:
+    return isinstance(email, str) and email.strip().lower().endswith(".edu")
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+def check_password(plain: str, hashed: str) -> bool:
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except Exception:
+        return False
 
 @app.get("/health")
-def root():
-    return {"message": "Connected to Neon PostgreSQL successfully!"}
+def health():
+    return {"ok": True}
+
+# Serve login page
+@app.get("/", response_class=HTMLResponse)
+@app.get("/login", response_class=HTMLResponse)
+def show_login(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+# Sign up (.edu only) -> create user
+@app.post("/signup")
+def signup(
+    email: str = Form(...),
+    password: str = Form(...),
+    first_name: str = Form(""),
+    last_name: str = Form(""),
+):
+    if not is_edu(email):
+        raise HTTPException(status_code=400, detail="Email must end with .edu")
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+
+    db = SessionLocal()
+    try:
+        if db.query(User).filter(User.email == email).first():
+            return JSONResponse({"ok": True, "message": "Account already exists. Please log in."})
+        name = " ".join([x for x in [first_name.strip(), last_name.strip()] if x]).strip()
+        user = User(name=name, email=email, password_hash=hash_password(password))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return JSONResponse({"ok": True, "message": "Account created. You can now log in."})
+    finally:
+        db.close()
+
+# Login -> set session and redirect
+@app.post("/login")
+def login(request: Request, email: str = Form(...), password: str = Form(...)):
+    if not is_edu(email):
+        raise HTTPException(status_code=400, detail="Email must end with .edu")
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == email).first()
+        if not user or not check_password(password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        request.session["user_id"] = user.id
+        return JSONResponse({"ok": True, "message": "Logged in", "redirect": "/profile"})
+    finally:
+        db.close()
+
+# Profile (requires session)
+@app.get("/profile", response_class=HTMLResponse)
+def profile(request: Request):
+    uid = request.session.get("user_id")
+    if not uid:
+        return RedirectResponse(url="/login", status_code=303)
+    db = SessionLocal()
+    try:
+        try:
+            user = db.get(User, uid)          # SQLAlchemy 2.x
+        except Exception:
+            user = db.query(User).get(uid)     # SQLAlchemy 1.x fallback
+        if not user:
+            request.session.clear()
+            return RedirectResponse(url="/login", status_code=303)
+        listings = db.query(Listing).filter(Listing.lister == uid).all()
+        return templates.TemplateResponse("profile.html", {"request": request, "user": user, "listings": listings})
+    finally:
+        db.close()
+
+# Render create listing form (session required)
+@app.get("/create_listing", response_class=HTMLResponse)
+def render_create_listing(request: Request):
+    if not request.session.get("user_id"):
+        return RedirectResponse(url="/login", status_code=303)
+    return templates.TemplateResponse("create_listing.html", {"request": request})
+
+# Create listing (use logged-in user)
+@app.post("/create_listing")
+def create_listing(
+    request: Request,
+    title: str = Form(...),
+    bedrooms_available: int = Form(...),
+    total_rooms: int = Form(...),
+    bedrooms_in_use: int = Form(...),
+    bathrooms: int = Form(...),
+    cost_per_month: float = Form(...),
+    available_start_date: str = Form(...),
+    available_end_date: str = Form(...),
+    address: str = Form(...),
+    city: str = Form(...),
+    state: str = Form(...),
+    zip_code: str = Form(...),
+    amenities: str = Form(""),
+    latitude: float | None = Form(None),
+    longitude: float | None = Form(None),
+):
+    uid = request.session.get("user_id")
+    if not uid:
+        return RedirectResponse(url="/login", status_code=303)
+    db = SessionLocal()
+    try:
+        listing = Listing(
+            title=title,
+            lister=uid,
+            bedrooms_available=bedrooms_available,
+            total_rooms=total_rooms,
+            bedrooms_in_use=bedrooms_in_use,
+            bathrooms=bathrooms,
+            cost_per_month=cost_per_month,
+            available_start_date=available_start_date,
+            available_end_date=available_end_date,
+            address=address,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            amenities=amenities,
+            latitude=latitude,
+            longitude=longitude,
+        )
+        db.add(listing)
+        db.commit()
+        return RedirectResponse(url="/profile", status_code=303)
+    finally:
+        db.close()
+
+@app.post("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/login", status_code=303)
 
 @app.get("/users")
 def list_users():
@@ -45,85 +181,6 @@ def list_users():
     result = [{"id": u.id, "name": u.name, "email": u.email} for u in users]
     session.close()
     return result
-
-@app.get("/", response_class=HTMLResponse)
-@app.get("/login", response_class=HTMLResponse)
-def show_login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-def is_edu(email: str) -> bool:
-    return isinstance(email, str) and email.lower().endswith(".edu")
-
-class SignupPayload(BaseModel):
-    email: EmailStr
-    password: str
-    first_name: str | None = None
-    last_name: str | None = None
-
-@app.post("/signup")
-async def signup(payload: SignupPayload):
-    if not is_edu(payload.email):
-        raise HTTPException(status_code=400, detail="Email must end with .edu")
-    if len(payload.password) < 8:
-        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
-
-    # If already verified/user exists -> generic success
-    existing = supabase.table("users").select("id").eq("email", payload.email).limit(1).execute()
-    if existing.data:
-        return {"ok": True, "message": "If the account exists, a verification email has been sent."}
-
-    name = " ".join(filter(None, [payload.first_name, payload.last_name])) or None
-    pwd_hash = hash_password(payload.password)
-    verify_url = make_verification_link(payload.email, name, pwd_hash)
-
-    try:
-        send_verification_email(payload.email, verify_url)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Failed to send verification email: {e}")
-
-    return {"ok": True, "message": "Check your email for a verification link."}
-
-@app.get("/verify", response_class=HTMLResponse)
-async def verify(token: str):
-    try:
-        data = serializer.loads(token, max_age=60 * 60 * 24)
-        email = data["email"]
-        name = data.get("name") or ""
-        password_hash = data["password_hash"]
-    except SignatureExpired:
-        raise HTTPException(status_code=400, detail="Verification link expired")
-    except BadSignature:
-        raise HTTPException(status_code=400, detail="Invalid verification link")
-
-    exists = supabase.table("users").select("id").eq("email", email).limit(1).execute()
-    if not exists.data:
-        supabase.table("users").insert({
-            "name": name,
-            "email": email,
-            "password_hash": password_hash
-        }).execute()
-
-    return HTMLResponse("""
-    <html><body style="font-family:system-ui">
-      <h2>Email verified</h2>
-      <p>Your account has been created. You can now <a href="/">log in</a>.</p>
-    </body></html>
-    """)
-
-@app.post("/login")
-async def login(email: str = Form(...), password: str = Form(...)):
-    if not is_edu(email):
-        raise HTTPException(status_code=400, detail="Email must end with .edu")
-
-    resp = supabase.table("users").select("id,password_hash").eq("email", email).limit(1).execute()
-    if not resp.data:
-        raise HTTPException(status_code=401, detail="Invalid credentials or email not verified")
-
-    row = resp.data[0]
-    if not bcrypt.checkpw(password.encode("utf-8"), row["password_hash"].encode("utf-8")):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    return JSONResponse({"ok": True, "message": "Logged in"})
 
 @app.get("/homepage", response_class=HTMLResponse)
 def show_homepage(
@@ -244,63 +301,4 @@ def get_search_results(filters: SearchFilterStructure):
         return results
     finally:
         session.close()
-
-@app.get("/create_listing", response_class=HTMLResponse)
-def render_create_listing(request: Request, user_id: int):
-    return templates.TemplateResponse(
-        "create_listing.html",
-        {"request": request, "user_id": user_id}
-    )
-
-@app.post("/create_listing")
-def create_listing(
-    request: Request,
-    user_id: int = Form(...),
-    title: str = Form(...),
-    bedrooms_available: int = Form(...),
-    total_rooms: int = Form(...),
-    bedrooms_in_use: int = Form(...),
-    bathrooms: int = Form(...),
-    cost_per_month: float = Form(...),
-    available_start_date: str = Form(...),
-    available_end_date: str = Form(...),
-    address: str = Form(...),
-    city: str = Form(...),
-    state: str = Form(...),
-    zip_code: str = Form(...),
-    amenities: str = Form(""),
-    latitude: float | None = Form(None),
-    longitude: float | None = Form(None),
-):
-    session = SessionLocal()
-    try:
-        # Basic validation
-        if cost_per_month < 0:
-            raise HTTPException(status_code=400, detail="Invalid price")
-
-        listing = Listing(
-            title=title,
-            lister=user_id,
-            bedrooms_available=bedrooms_available,
-            total_rooms=total_rooms,
-            bedrooms_in_use=bedrooms_in_use,
-            bathrooms=bathrooms,
-            cost_per_month=cost_per_month,
-            available_start_date=available_start_date,
-            available_end_date=available_end_date,
-            address=address,
-            city=city,
-            state=state,
-            zip_code=zip_code,
-            amenities=amenities,
-            latitude=latitude,
-            longitude=longitude,
-        )
-        session.add(listing)
-        session.commit()
-        session.refresh(listing)
-    finally:
-        session.close()
-
-    return RedirectResponse(url=f"/profile/{user_id}", status_code=303)
 

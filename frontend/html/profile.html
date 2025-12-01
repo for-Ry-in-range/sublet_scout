@@ -3,31 +3,34 @@
 {% block title %}Sublet Scout | Profile{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h1>User Profile</h1>
+<div class="container">
+  <h1>User Profile</h1>
 
-        <h2>Account Information</h2>
-        {% if user %}
-            <p><strong>Name:</strong> {{ user.name }}</p>
-            <p><strong>Email:</strong> {{ user.email }}</p>
-        {% else %}
-            <p>User information not available.</p>
-        {% endif %}
+  <h2>Account Information</h2>
+  {% if user %}
+    <p><strong>Name:</strong> {{ user.name }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+  {% else %}
+    <p>User information not available.</p>
+  {% endif %}
 
-        <h2>Your Listings</h2>
-        {% if listings and listings|length > 0 %}
-            <ul>
-                {% for l in listings %}
-                    <li>
-                        <strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}
-                        <a href="/listing/{{ l.id }}">View</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No listings yet.</p>
-        {% endif %}
+  <h2>Your Listings</h2>
+  {% if listings and listings|length > 0 %}
+    <ul>
+      {% for l in listings %}
+        <li>
+          <strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No listings yet.</p>
+  {% endif %}
 
-        <p><a href="/create_listing?user_id={{ user.id }}">Add New Listing</a></p>
-    </div>
+  <p><a href="/create_listing">Add New Listing</a></p>
+
+  <form action="/logout" method="POST" style="margin-top:12px">
+    <button type="submit">Log out</button>
+  </form>
+</div>
 {% endblock %}

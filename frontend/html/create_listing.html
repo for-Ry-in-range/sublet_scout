@@ -6,7 +6,6 @@
 <div class="container">
   <h1>Create Listing</h1>
   <form action="/create_listing" method="POST">
-    <input type="hidden" name="user_id" value="{{ user_id }}">
     <label>Title:<input name="title" required></label>
     <label>Bedrooms Available:<input type="number" name="bedrooms_available" min="0" required></label>
     <label>Total Rooms:<input type="number" name="total_rooms" min="0" required></label>
@@ -24,6 +23,6 @@
     <label>Longitude:<input type="number" step="0.000001" name="longitude"></label>
     <button type="submit">Create</button>
   </form>
-  <p><a href="/profile/{{ user_id }}">Back to Profile</a></p>
+  <p><a href="/profile">Back to Profile</a></p>
 </div>
 {% endblock %}
