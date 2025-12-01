@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles  # ADD
+from fastapi.staticfiles import StaticFiles
 import os, bcrypt
 
 from app.database import Base, engine, SessionLocal
@@ -50,6 +50,9 @@ def health():
 @app.get("/", response_class=HTMLResponse)
 @app.get("/login", response_class=HTMLResponse)
 def show_login(request: Request):
+    # If session exists, go to profile instead of showing login
+    if request.session.get("user_id"):
+        return RedirectResponse(url="/profile", status_code=303)
     return templates.TemplateResponse("login.html", {"request": request})
 
 # Sign up (.edu only) -> create user
@@ -301,4 +304,45 @@ def get_search_results(filters: SearchFilterStructure):
         return results
     finally:
         session.close()
+
+# Map page (renders Google Maps)
+@app.get("/map", response_class=HTMLResponse)
+def map_page(request: Request):
+    return templates.TemplateResponse(
+        "map.html",
+        {"request": request, "google_maps_key": os.getenv("GOOGLE_MAP_KEY", "")},
+    )
+
+# Listings for map (only those with coordinates)
+@app.get("/api/listings")
+def api_listings():
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(Listing)
+            .filter(Listing.latitude.isnot(None), Listing.longitude.isnot(None))
+            .all()
+        )
+        def to_dict(l):
+            return {
+                "id": l.id,
+                "title": l.title,
+                "bedrooms_available": l.bedrooms_available,
+                "total_rooms": l.total_rooms,
+                "bedrooms_in_use": l.bedrooms_in_use,
+                "bathrooms": l.bathrooms,
+                "cost_per_month": float(l.cost_per_month) if getattr(l, "cost_per_month", None) is not None else None,
+                "available_start_date": str(l.available_start_date) if getattr(l, "available_start_date", None) is not None else None,
+                "available_end_date": str(l.available_end_date) if getattr(l, "available_end_date", None) is not None else None,
+                "address": l.address,
+                "city": l.city,
+                "state": l.state,
+                "zip_code": l.zip_code,
+                "amenities": l.amenities,
+                "latitude": float(l.latitude) if l.latitude is not None else None,
+                "longitude": float(l.longitude) if l.longitude is not None else None,
+            }
+        return {"items": [to_dict(l) for l in rows]}
+    finally:
+        db.close()
 
