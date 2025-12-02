@@ -17,6 +17,10 @@ class ListingStructure(BaseModel):
     state: str
     zip_code: str
     amenities: str
+    image1: str
+    image2: str
+    image3: str
+    image4: str
 
 class BookingRequestStructure(BaseModel):
     listing_id: int

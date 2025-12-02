@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container">
   <h1>Create Listing</h1>
-  <form action="/create_listing" method="POST">
+  <form action="/listings" method="POST" enctype="multipart/form-data">
     <label>Title:<input name="title" required></label>
     <label>Bedrooms Available:<input type="number" name="bedrooms_available" min="0" required></label>
     <label>Total Rooms:<input type="number" name="total_rooms" min="0" required></label>
@@ -18,11 +18,31 @@
     <label>City:<input name="city" required></label>
     <label>State:<input name="state" required></label>
     <label>Zip Code:<input name="zip_code" required></label>
-    <label>Amenities (comma separated):<input name="amenities"></label>
-    <label>Latitude:<input type="number" step="0.000001" name="latitude"></label>
-    <label>Longitude:<input type="number" step="0.000001" name="longitude"></label>
+    <label>Amenitises (comma separated):<input name="amenities"></label>
+    <label>Upload 4 images of your apartment:
+      <input type="file" name="image1" accept="image/*">
+      <input type="file" name="image2" accept="image/*">
+      <input type="file" name="image3" accept="image/*">
+      <input type="file" name="image4" accept="image/*">
+    </label>
     <button type="submit">Create</button>
   </form>
   <p><a href="/profile">Back to Profile</a></p>
 </div>
+
+<script>
+  const form = document.querySelector('form');
+  
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    
+    await fetch('/listings', {
+      method: 'POST',
+      body: formData
+    });
+  });
+</script>
+
 {% endblock %}

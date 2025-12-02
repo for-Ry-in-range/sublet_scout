@@ -21,5 +21,9 @@ class Listing(Base):
     amenities = Column(String)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
+    image1 = Column(String)
+    image2 = Column(String)
+    image3 = Column(String)
+    image4 = Column(String)
 
     lister_user = relationship("User", back_populates="listings")

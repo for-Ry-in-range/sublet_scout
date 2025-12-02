@@ -10,6 +10,7 @@ import os, bcrypt
 
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
+from app.routes.listing import router as listing_router
 from app.models.listing import Listing
 from app.schemas import SearchFilterStructure  # FIX: add this
 
@@ -17,6 +18,7 @@ from app.schemas import SearchFilterStructure  # FIX: add this
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.include_router(listing_router)
 
 # Sessions (cookie-based)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me"), same_site="lax")
@@ -142,6 +144,10 @@ def create_listing(
     amenities: str = Form(""),
     latitude: float | None = Form(None),
     longitude: float | None = Form(None),
+    image1: str = Form(...),
+    image2: str = Form(...),
+    image3: str = Form(...),
+    image4: str = Form(...),
 ):
     uid = request.session.get("user_id")
     if not uid:
@@ -165,6 +171,10 @@ def create_listing(
             amenities=amenities,
             latitude=latitude,
             longitude=longitude,
+            image1=image1,
+            image2=image2,
+            image3=image3,
+            image4=image4,
         )
         db.add(listing)
         db.commit()
@@ -341,6 +351,10 @@ def api_listings():
                 "amenities": l.amenities,
                 "latitude": float(l.latitude) if l.latitude is not None else None,
                 "longitude": float(l.longitude) if l.longitude is not None else None,
+                "image1": l.image1,
+                "image2": l.image2,
+                "image3": l.image3,
+                "image4": l.image4,
             }
         return {"items": [to_dict(l) for l in rows]}
     finally:
