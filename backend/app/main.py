@@ -29,7 +29,7 @@ FRONTEND_HTML = os.path.join(BASE_DIR, "..", "frontend", "html")
 templates = Jinja2Templates(directory=FRONTEND_HTML)
 
 # Mount static files so url_for('static', path='homepage.css') works
-STATIC_DIR = os.path.join(BASE_DIR, "..", "frontend", "static")
+STATIC_DIR = os.path.join(BASE_DIR, "..", "frontend", "css")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 def is_edu(email: str) -> bool:
