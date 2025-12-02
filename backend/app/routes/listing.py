@@ -8,7 +8,7 @@ router = APIRouter()
 @router.get("/listings/{listing_id}")
 def read_listing_endpoint(request: Request, listing_id: int):
     return get_listing_by_id(request, listing_id, None)
-
+ 
 @router.post("/listings")
 async def create_listing_endpoint(
     title: str = Form(...),

@@ -124,64 +124,7 @@ def render_create_listing(request: Request):
     if not request.session.get("user_id"):
         return RedirectResponse(url="/login", status_code=303)
     return templates.TemplateResponse("create_listing.html", {"request": request})
-
-# Create listing (use logged-in user)
-@app.post("/create_listing")
-def create_listing(
-    request: Request,
-    title: str = Form(...),
-    bedrooms_available: int = Form(...),
-    total_rooms: int = Form(...),
-    bedrooms_in_use: int = Form(...),
-    bathrooms: int = Form(...),
-    cost_per_month: float = Form(...),
-    available_start_date: str = Form(...),
-    available_end_date: str = Form(...),
-    address: str = Form(...),
-    city: str = Form(...),
-    state: str = Form(...),
-    zip_code: str = Form(...),
-    amenities: str = Form(""),
-    latitude: float | None = Form(None),
-    longitude: float | None = Form(None),
-    image1: str = Form(...),
-    image2: str = Form(...),
-    image3: str = Form(...),
-    image4: str = Form(...),
-):
-    uid = request.session.get("user_id")
-    if not uid:
-        return RedirectResponse(url="/login", status_code=303)
-    db = SessionLocal()
-    try:
-        listing = Listing(
-            title=title,
-            lister=uid,
-            bedrooms_available=bedrooms_available,
-            total_rooms=total_rooms,
-            bedrooms_in_use=bedrooms_in_use,
-            bathrooms=bathrooms,
-            cost_per_month=cost_per_month,
-            available_start_date=available_start_date,
-            available_end_date=available_end_date,
-            address=address,
-            city=city,
-            state=state,
-            zip_code=zip_code,
-            amenities=amenities,
-            latitude=latitude,
-            longitude=longitude,
-            image1=image1,
-            image2=image2,
-            image3=image3,
-            image4=image4,
-        )
-        db.add(listing)
-        db.commit()
-        return RedirectResponse(url="/profile", status_code=303)
-    finally:
-        db.close()
-
+ 
 @app.post("/logout")
 def logout(request: Request):
     request.session.clear()
