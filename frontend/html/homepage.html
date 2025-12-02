@@ -17,7 +17,10 @@
     <form action="{{ url_for('show_homepage') }}" method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
       <input type="text" id="q" name="q" placeholder="Location (neighborhood or city)" value="{{ query }}" style="flex:1 1 200px;padding:.4rem;">
       <input type="number" id="price" name="price" placeholder="Max $" value="{{ price }}" style="width:110px;padding:.4rem;">
-      <input type="text" id="dates" name="dates" placeholder="Dates (e.g. May - August)" value="{{ dates }}" style="flex:1 1 160px;padding:.4rem;">
+      <div style="display:flex;gap:.5rem;width:100%;">
+        <label>Start date<input type="date" id="start_date" name="start_date" style="flex:1 1 160px;padding:.4rem;"></label>
+        <label>End date<input type="date" id="end_date" name="end_date" style="flex:1 1 160px;padding:.4rem;"></label>
+      </div>
       {% if user_id %}
         <input type="hidden" name="user_id" value="{{ user_id }}">
       {% endif %}
