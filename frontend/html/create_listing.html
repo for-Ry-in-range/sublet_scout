@@ -18,7 +18,7 @@
     <label>City:<input name="city" required></label>
     <label>State:<input name="state" required></label>
     <label>Zip Code:<input name="zip_code" required></label>
-    <label>Amenitises (comma separated):<input name="amenities"></label>
+    <label>Amenities (comma separated):<input name="amenities"></label>
     <label>Upload 4 images of your apartment:
       <input type="file" name="image1" accept="image/*">
       <input type="file" name="image2" accept="image/*">
@@ -38,10 +38,16 @@
     
     const formData = new FormData(form);
     
-    await fetch('/listings', {
+    const response = await fetch('/listings', {
       method: 'POST',
       body: formData
     });
+
+    if (response.ok) {
+      window.location.href = '/profile'; // Redirect to profile page
+    } else {
+      alert('Failed to create listing.');
+    }
   });
 </script>
 

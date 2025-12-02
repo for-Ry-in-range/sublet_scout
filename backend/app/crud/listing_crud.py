@@ -74,6 +74,7 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
     
 
 async def create_listing(
+    request: Request,
     title: str,
     bedrooms_available: int,
     total_rooms: int,
@@ -120,9 +121,12 @@ async def create_listing(
 
     # Adding the listing to database
 
+    uid = request.session.get("user_id")
+    if not uid:
+        return RedirectResponse(url="/login", status_code=303)
     session = SessionLocal()
     try:
-        new_listing = Listing(title=title, bedrooms_available=bedrooms_available, total_rooms=total_rooms, bedrooms_in_use=bedrooms_in_use, bathrooms=bathrooms, cost_per_month=cost_per_month, available_start_date=available_start_date, available_end_date=available_end_date, address=address, city=city, state=state, zip_code=zip_code, amenities=amenities, latitude=latitude, longitude=longitude, image1=image1_base64, image2=image2_base64, image3=image3_base64, image4=image4_base64)
+        new_listing = Listing(title=title, lister=uid, bedrooms_available=bedrooms_available, total_rooms=total_rooms, bedrooms_in_use=bedrooms_in_use, bathrooms=bathrooms, cost_per_month=cost_per_month, available_start_date=available_start_date, available_end_date=available_end_date, address=address, city=city, state=state, zip_code=zip_code, amenities=amenities, latitude=latitude, longitude=longitude, image1=image1_base64, image2=image2_base64, image3=image3_base64, image4=image4_base64)
         session.add(new_listing)
         session.commit()
         session.refresh(new_listing) # Adds the id to new_listing
