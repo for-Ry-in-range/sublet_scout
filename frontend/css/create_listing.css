@@ -1,0 +1,92 @@
+/* Create Listing — clean, responsive form */
+
+.cl-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.cl-wrap h1 {
+  margin: 0 0 12px;
+  color: #2c3e50;
+  font-size: 1.8rem;
+}
+
+.cl-form {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+}
+
+.cl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 14px 16px;
+}
+
+.cl-grid .full {
+  grid-column: 1 / -1;
+}
+
+label span,
+.label {
+  display: block;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="file"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #cfd8dc;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+}
+
+input[type="file"] {
+  padding: 8px;
+}
+
+.cl-files {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 10px 12px;
+}
+
+.cl-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #cfd8dc;
+  background: #fff;
+  color: #2c3e50;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: #3498db;
+  color: #fff;
+  border-color: #3498db;
+}
+.btn.primary:hover { background: #2980b9; }
+
+@media (max-width: 760px) {
+  .cl-grid { grid-template-columns: 1fr; }
+  .cl-files { grid-template-columns: 1fr; }
+}

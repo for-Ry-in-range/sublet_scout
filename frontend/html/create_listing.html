@@ -3,52 +3,104 @@
 {% block title %}Create Listing{% endblock %}
 
 {% block content %}
-<div class="container">
+<link rel="stylesheet" href="{{ url_for('static', path='create_listing.css') }}">
+
+<div class="cl-wrap">
   <h1>Create Listing</h1>
-  <form action="/listings" method="POST" enctype="multipart/form-data">
-    <label>Title:<input name="title" required></label>
-    <label>Bedrooms Available:<input type="number" name="bedrooms_available" min="0" required></label>
-    <label>Total Rooms:<input type="number" name="total_rooms" min="0" required></label>
-    <label>Bedrooms In Use:<input type="number" name="bedrooms_in_use" min="0" required></label>
-    <label>Bathrooms:<input type="number" name="bathrooms" min="0" required></label>
-    <label>Cost / Month:<input type="number" step="0.01" name="cost_per_month" min="0" required></label>
-    <label>Available Start Date:<input type="date" name="available_start_date" required></label>
-    <label>Available End Date:<input type="date" name="available_end_date" required></label>
-    <label>Address:<input name="address" required></label>
-    <label>City:<input name="city" required></label>
-    <label>State:<input name="state" required></label>
-    <label>Zip Code:<input name="zip_code" required></label>
-    <label>Amenities (comma separated):<input name="amenities"></label>
-    <label>Upload 4 images of your apartment:
-      <input type="file" name="image1" accept="image/*">
-      <input type="file" name="image2" accept="image/*">
-      <input type="file" name="image3" accept="image/*">
-      <input type="file" name="image4" accept="image/*">
-    </label>
-    <button type="submit">Create</button>
+
+  <form class="cl-form" action="/listings" method="POST" enctype="multipart/form-data">
+    <div class="cl-grid">
+      <label class="full">
+        <span>Title</span>
+        <input name="title" required>
+      </label>
+
+      <label>
+        <span>Bedrooms Available</span>
+        <input type="number" name="bedrooms_available" min="0" required>
+      </label>
+
+      <label>
+        <span>Total Rooms</span>
+        <input type="number" name="total_rooms" min="0" required>
+      </label>
+
+      <label>
+        <span>Bedrooms In Use</span>
+        <input type="number" name="bedrooms_in_use" min="0" required>
+      </label>
+
+      <label>
+        <span>Bathrooms</span>
+        <input type="number" name="bathrooms" min="0" required>
+      </label>
+
+      <label>
+        <span>Cost / Month ($)</span>
+        <input type="number" step="0.01" name="cost_per_month" min="0" required>
+      </label>
+
+      <label>
+        <span>Available Start Date</span>
+        <input type="date" name="available_start_date" required>
+      </label>
+
+      <label>
+        <span>Available End Date</span>
+        <input type="date" name="available_end_date" required>
+      </label>
+
+      <label class="full">
+        <span>Address</span>
+        <input name="address" required>
+      </label>
+
+      <label>
+        <span>City</span>
+        <input name="city" required>
+      </label>
+
+      <label>
+        <span>State</span>
+        <input name="state" required>
+      </label>
+
+      <label>
+        <span>Zip Code</span>
+        <input name="zip_code" required>
+      </label>
+
+      <label class="full">
+        <span>Amenities (comma separated)</span>
+        <input name="amenities">
+      </label>
+
+      <div class="full">
+        <span class="label">Upload 4 images</span>
+        <div class="cl-files">
+          <input type="file" name="image1" accept="image/*">
+          <input type="file" name="image2" accept="image/*">
+          <input type="file" name="image3" accept="image/*">
+          <input type="file" name="image4" accept="image/*">
+        </div>
+      </div>
+    </div>
+
+    <div class="cl-actions">
+      <button type="submit" class="btn primary">Create Listing</button>
+      <a href="/profile" class="btn">Cancel</a>
+    </div>
   </form>
-  <p><a href="/profile">Back to Profile</a></p>
 </div>
 
 <script>
-  const form = document.querySelector('form');
-  
+  const form = document.querySelector('.cl-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const formData = new FormData(form);
-    
-    const response = await fetch('/listings', {
-      method: 'POST',
-      body: formData
-    });
-
-    if (response.ok) {
-      window.location.href = '/profile'; // Redirect to profile page
-    } else {
-      alert('Failed to create listing.');
-    }
+    const response = await fetch('/listings', { method: 'POST', body: formData });
+    if (response.ok) window.location.href = '/profile';
+    else alert('Failed to create listing.');
   });
 </script>
-
 {% endblock %}
