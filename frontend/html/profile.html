@@ -3,34 +3,41 @@
 {% block title %}Sublet Scout | Profile{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h1>User Profile</h1>
+<div class="profile-page">
+  <div class="profile-card">
+    <h1>User Profile</h1>
 
-  <h2>Account Information</h2>
-  {% if user %}
-    <p><strong>Name:</strong> {{ user.name }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-  {% else %}
-    <p>User information not available.</p>
-  {% endif %}
+    <section class="section">
+      <h2>Account Information</h2>
+      {% if user %}
+        <p><strong>Name:</strong> {{ user.name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+      {% else %}
+        <p>User information not available.</p>
+      {% endif %}
+    </section>
 
-  <h2>Your Listings</h2>
-  {% if listings and listings|length > 0 %}
-    <ul>
-      {% for l in listings %}
-        <li>
-            <a href="/listings/{{l.id}}"><strong></strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}</a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No listings yet.</p>
-  {% endif %}
+    <section class="section">
+      <h2>Your Listings</h2>
+      {% if listings and listings|length > 0 %}
+        <ul class="listings">
+          {% for l in listings %}
+            <li>
+              <a href="/listings/{{l.id}}"><strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No listings yet.</p>
+      {% endif %}
+    </section>
 
-  <p><a href="/create_listing">Add New Listing</a></p>
-
-  <form action="/logout" method="POST" style="margin-top:12px">
-    <button type="submit">Log out</button>
-  </form>
+    <div class="actions">
+      <a href="/create_listing" class="btn">Add New Listing</a>
+      <form action="/logout" method="POST">
+        <button type="submit" class="btn outline">Log out</button>
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
