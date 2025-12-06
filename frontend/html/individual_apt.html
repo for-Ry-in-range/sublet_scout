@@ -2,7 +2,6 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', path='individual_apt.css') }}">
-<script src="https://maps.googleapis.com/maps/api/js?key={{ map_key }}"></script>
 
 <div class="container" style="padding-top: 6.0rem;">
     <h1>{{ apt.title }}</h1>
@@ -43,7 +42,8 @@
 
 <script>
     function initMap() {
-        const location = { lat: {{ apt.latitude }}, lng: {{ apt.longitude }} };
+        const location = { lat: {{ apt.latitude }}, lng: {{apt.longitude}} };
+        console.log("looo" + location.lng);
         const map = new google.maps.Map(document.getElementById("google-map"), {
             zoom: 14,
             center: location,
@@ -53,6 +53,10 @@
             map: map,
         });
     }
-    window.onload = initMap;
 </script>
+
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key={{ map_key }}&callback=initMap">
+</script>
+
 {% endblock %}

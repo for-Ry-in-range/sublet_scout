@@ -66,8 +66,6 @@ function initMap() {
     center: nyc
   });
 
-  new google.maps.Marker({ position: nyc, map: map });
-
   listings.forEach(function(item) {
     if (typeof item.latitude === 'number' && typeof item.longitude === 'number') {
       var pos = { lat: item.latitude, lng: item.longitude };

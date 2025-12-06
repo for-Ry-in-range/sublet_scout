@@ -44,6 +44,8 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
             "state": listing_data.state,
             "zip_code": listing_data.zip_code,
             "amenities": listing_data.amenities,
+            "latitude": listing_data.latitude,
+            "longitude": listing_data.longitude,
             "image1": listing_data.image1,
             "image2": listing_data.image2,
             "image3": listing_data.image3,
@@ -68,6 +70,8 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
             "apt": apt,
             "map_key": map_key,
             "user_id": user_id,
+            "latitude": listing_data.latitude,
+            "longitude": listing_data.longitude,
             "user_name": user_name
         }
     )
