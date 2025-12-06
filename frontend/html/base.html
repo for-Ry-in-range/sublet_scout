@@ -7,11 +7,14 @@
 
     <!-- shared CSS for navbar + pages -->
     <link rel="stylesheet" href="{{ url_for('static', path='homepage.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', path='profile.css') }}">  <!-- add this -->
+    <link rel="stylesheet" href="{{ url_for('static', path='profile.css') }}">
 </head>
 <body>
     <nav class="nav">
         <ul>
+            <li>
+                <img src="{{ url_for('static', path='logo_edited_full_white.png') }}" alt="Logo" style="height: 32px;">
+            </li>
             <li>
                 {% if user_id %}
                     <a href="{{ url_for('show_homepage') }}?user_id={{ user_id }}">Home</a>
@@ -24,9 +27,6 @@
             {% else %}
                 <li><a href="{{ url_for('show_login') }}">Profile</a></li>
             {% endif %}
-
-            <!-- TODO: add messaging route -->
-            <li><a href="/messaging">Messages</a></li>
 
             <li><a href="{{ url_for('show_login') }}">Login</a></li>
         </ul>
