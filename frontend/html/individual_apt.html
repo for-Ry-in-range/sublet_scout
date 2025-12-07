@@ -18,10 +18,10 @@
         <p><strong>Total Rooms:</strong> {{ apt.total_rooms }}</p>
         <p><strong>Bedrooms In Use:</strong> {{ apt.bedrooms_in_use }}</p>
         <p><strong>Bathrooms:</strong> {{ apt.bathrooms }}</p>
-        <p><strong>Price:</strong> ${{ apt.price }}/month</p>
+        <p><strong>Price:</strong> ${{ "%.2f"|format(apt.cost_per_month) }}/month</p>
 
         <p><strong>Available:</strong> 
-            {{ apt.start_date }} – {{ apt.end_date }}
+            {{ apt.available_start_date }} to {{ apt.available_end_date }}
         </p>
     </div>
 
@@ -43,7 +43,6 @@
 <script>
     function initMap() {
         const location = { lat: {{ apt.latitude }}, lng: {{apt.longitude}} };
-        console.log("looo" + location.lng);
         const map = new google.maps.Map(document.getElementById("google-map"), {
             zoom: 14,
             center: location,
