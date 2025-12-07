@@ -23,7 +23,7 @@
         <ul class="listings">
           {% for l in listings %}
             <li>
-              <a href="/listings/{{l.id}}"><strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}</a>
+              <a href="/listings/{{l.id}}?user={{user_id}}"><strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}</a>
             </li>
           {% endfor %}
         </ul>

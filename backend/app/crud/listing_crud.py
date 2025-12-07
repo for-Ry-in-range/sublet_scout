@@ -30,6 +30,7 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
         if not listing_data:
             return None
         apt = {
+            "id": listing_id,
             "title": listing_data.title,
             "lister": listing_data.lister, 
             "bedrooms_available": listing_data.bedrooms_available,
@@ -72,7 +73,8 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
             "user_id": user_id,
             "latitude": listing_data.latitude,
             "longitude": listing_data.longitude,
-            "user_name": user_name
+            "user_name": user_name,
+            "listing_id": 15
         }
     )
     

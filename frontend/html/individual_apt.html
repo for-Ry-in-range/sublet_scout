@@ -25,6 +25,8 @@
         </p>
     </div>
 
+    <button id="requestBooking">Request Booking</button>
+
     <!-- Map -->
     <div class="map">
         <h2>Location</h2>
@@ -41,6 +43,27 @@
 </div>
 
 <script>
+    const pathParts = window.location.pathname.split('/');
+    const listing_id = pathParts[2];
+    const params = new URLSearchParams(window.location.search);
+    const user_id = params.get('user');
+    document.getElementById("requestBooking").onclick = function() {
+        console.log("sdajfsakdl");
+        fetch('/booking_requests', {method: 'POST',
+            headers: { 'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                listing_id: listing_id,
+                subletter_id: user_id
+            })
+        })
+        .then(response => {
+            console.log('Fetch response:', response);
+        })
+        .catch(error => {
+            console.error()
+        });
+    };
+
     function initMap() {
         const location = { lat: {{ apt.latitude }}, lng: {{apt.longitude}} };
         const map = new google.maps.Map(document.getElementById("google-map"), {
@@ -51,7 +74,8 @@
             position: location,
             map: map,
         });
-    }
+    };
+
 </script>
 
 <script async defer

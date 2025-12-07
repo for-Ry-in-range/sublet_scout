@@ -11,6 +11,7 @@ import os, bcrypt
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
 from app.routes.listing import router as listing_router
+from app.routes.booking_request import router as booking_request_router
 from app.models.listing import Listing
 from app.schemas import SearchFilterStructure  # FIX: add this
 
@@ -19,6 +20,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.include_router(listing_router)
+app.include_router(booking_request_router)
 
 # Sessions (cookie-based)
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "change-me"), same_site="lax")
@@ -114,7 +116,7 @@ def profile(request: Request):
             request.session.clear()
             return RedirectResponse(url="/login", status_code=303)
         listings = db.query(Listing).filter(Listing.lister == uid).all()
-        return templates.TemplateResponse("profile.html", {"request": request, "user": user, "listings": listings})
+        return templates.TemplateResponse("profile.html", {"request": request, "user": user, "listings": listings, "user_id": uid})
     finally:
         db.close()
 
