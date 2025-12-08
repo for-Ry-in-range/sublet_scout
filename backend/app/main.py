@@ -161,7 +161,8 @@ def show_homepage(
                 user_name = user_obj.name
 
         # Build query (simple filters for q and price)
-        query_stmt = session.query(Listing)
+        # filter out inactive listings
+        query_stmt = session.query(Listing).filter(Listing.is_active == True)
         if q:
             q_like = f"%{q}%"
             query_stmt = query_stmt.filter(

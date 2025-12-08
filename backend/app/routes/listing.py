@@ -36,3 +36,20 @@ async def create_listing_endpoint(
 @router.delete("/listings/{listing_id}")
 def delete_listing_endpoint(listing_id: int):
     return delete_listing(listing_id)
+
+@router.post("/listings/{listing_id}/activate")
+def activate_listing(request: Request, listing_id: int, db=Depends(get_db)):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return {"error": "Login required"}
+
+    return set_listing_active_state(db, listing_id, user_id, True)
+
+
+@router.post("/listings/{listing_id}/deactivate")
+def deactivate_listing(request: Request, listing_id: int, db=Depends(get_db)):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return {"error": "Login required"}
+
+    return set_listing_active_state(db, listing_id, user_id, False)

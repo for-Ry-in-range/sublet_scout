@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 import os, requests
 from fastapi.templating import Jinja2Templates
 import base64
+from app.models.user import User
 
 load_dotenv()
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,10 +22,7 @@ async def image_to_base64(upload_file):
 
 def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = None):
     session = SessionLocal()
-    try:
-        # TODO: implement images later
-        images = []
-        
+    try:        
         query = session.query(Listing)
         listing_data = query.filter(Listing.id == listing_id).first()
         if not listing_data:
@@ -32,6 +30,7 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
         apt = {
             "id": listing_id,
             "title": listing_data.title,
+            "is_active": listing_data.is_active,
             "lister": listing_data.lister, 
             "bedrooms_available": listing_data.bedrooms_available,
             "total_rooms": listing_data.total_rooms,
@@ -74,7 +73,7 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
             "latitude": listing_data.latitude,
             "longitude": listing_data.longitude,
             "user_name": user_name,
-            "listing_id": 15
+            "listing_id": listing_id
         }
     )
     
@@ -82,6 +81,7 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
 async def create_listing(
     request: Request,
     title: str,
+    is_active: bool,
     bedrooms_available: int,
     total_rooms: int,
     bedrooms_in_use: int,
@@ -132,7 +132,7 @@ async def create_listing(
         return RedirectResponse(url="/login", status_code=303)
     session = SessionLocal()
     try:
-        new_listing = Listing(title=title, lister=uid, bedrooms_available=bedrooms_available, total_rooms=total_rooms, bedrooms_in_use=bedrooms_in_use, bathrooms=bathrooms, cost_per_month=cost_per_month, available_start_date=available_start_date, available_end_date=available_end_date, address=address, city=city, state=state, zip_code=zip_code, amenities=amenities, latitude=latitude, longitude=longitude, image1=image1_base64, image2=image2_base64, image3=image3_base64, image4=image4_base64)
+        new_listing = Listing(title=title, lister=uid, is_active=True, bedrooms_available=bedrooms_available, total_rooms=total_rooms, bedrooms_in_use=bedrooms_in_use, bathrooms=bathrooms, cost_per_month=cost_per_month, available_start_date=available_start_date, available_end_date=available_end_date, address=address, city=city, state=state, zip_code=zip_code, amenities=amenities, latitude=latitude, longitude=longitude, image1=image1_base64, image2=image2_base64, image3=image3_base64, image4=image4_base64)
         session.add(new_listing)
         session.commit()
         session.refresh(new_listing) # Adds the id to new_listing
@@ -158,3 +158,16 @@ def delete_listing(listing_id: int):
         )
     finally:
         session.close()
+
+
+def set_listing_active_state(db, listing_id: int, user_id: int, activate: bool):
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    if not listing:
+        return {"error": "Listing not found"}
+
+    if listing.lister != user_id:
+        return {"error": "Unauthorized — not your listing"}
+
+    listing.is_active = activate
+    db.commit()
+    return {"ok": True, "listing_id": listing_id, "is_active": activate}

@@ -23,7 +23,15 @@
         <ul class="listings">
           {% for l in listings %}
             <li>
-              <a href="/listings/{{l.id}}?user={{user_id}}"><strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}</a>
+              <a href="/listings/{{ l.id }}?user={{ user_id }}"><strong>{{ l.title }}</strong> – ${{ l.cost_per_month }}</a>
+
+              {% if l.is_active %}
+                <p>Status: <span style="color: green;">Active</span></p>
+                <button onclick="toggleListing({{ l.id }}, false)">Deactivate</button>
+              {% else %}
+                <p>Status: <span style="color: red;">Inactive</span></p>
+                <button onclick="toggleListing({{ l.id }}, true)">Activate</button>
+              {% endif %}
             </li>
           {% endfor %}
         </ul>
@@ -40,4 +48,21 @@
     </div>
   </div>
 </div>
+
+<script>
+function toggleListing(listingId, activate) {
+    const url = `/listings/${listingId}/` + (activate ? "activate" : "deactivate");
+
+    fetch(url, { method: "POST" })
+      .then(r => r.json())
+      .then(res => {
+        if (res.ok) {
+          location.reload();
+        } else {
+          alert(res.error || "Error updating listing");
+        }
+      });
+}
+</script>
+
 {% endblock %}

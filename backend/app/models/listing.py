@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -7,6 +7,7 @@ class Listing(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String)
     lister = Column(Integer, ForeignKey("users.id"))
+    is_active = Column(Boolean, default=True)
     bedrooms_available = Column(Integer)
     total_rooms = Column(Integer)
     bedrooms_in_use = Column(Integer)
