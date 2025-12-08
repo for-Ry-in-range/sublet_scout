@@ -6,11 +6,29 @@
 <div class="container" style="padding-top: 6.0rem;">
     <h1>{{ apt.title }}</h1>
 
-    <!-- Images -->
-    <img src="data:image/webp;base64,{{ apt.image1 }}" alt="Listing Image">
-    <img src="data:image/webp;base64,{{ apt.image2 }}" alt="Listing Image">
-    <img src="data:image/webp;base64,{{ apt.image3 }}" alt="Listing Image">
-    <img src="data:image/webp;base64,{{ apt.image4 }}" alt="Listing Image">
+    <!-- Image Carousel -->
+    <div class="carousel">
+    <div class="carousel-track">
+        {% if apt.image1 %}
+        <img src="data:image/webp;base64,{{ apt.image1 }}" class="carousel-img">
+        {% endif %}
+        {% if apt.image2 %}
+        <img src="data:image/webp;base64,{{ apt.image2 }}" class="carousel-img">
+        {% endif %}
+        {% if apt.image3 %}
+        <img src="data:image/webp;base64,{{ apt.image3 }}" class="carousel-img">
+        {% endif %}
+        {% if apt.image4 %}
+        <img src="data:image/webp;base64,{{ apt.image4 }}" class="carousel-img">
+        {% endif %}
+    </div>
+
+    <div class="carousel-controls">
+        <button class="carousel-btn prev">❮</button>
+        <button class="carousel-btn next">❯</button>
+    </div>
+</div>
+
 
     <!-- Details -->
     <div class="details">
@@ -36,13 +54,29 @@
     <!-- Amenities -->
     <h2>Amenities</h2>
     <ul>
-        {% for amenity in apt.amenities %}
-            <li>{{ amenity }}</li>
+        {% for amenity in apt.amenities.split(',') %}
+            <li>{{ amenity.strip() }}</li>
         {% endfor %}
     </ul>
 </div>
 
 <script>
+    // Carousel logic
+    let index = 0;
+    const track = document.querySelector(".carousel-track");
+    const images = document.querySelectorAll(".carousel-img");
+
+    document.querySelector(".carousel-btn.next").addEventListener("click", () => {
+        index = (index + 1) % images.length;
+        track.style.transform = `translateX(-${index * 100}%)`;
+    });
+
+    document.querySelector(".carousel-btn.prev").addEventListener("click", () => {
+        index = (index - 1 + images.length) % images.length;
+        track.style.transform = `translateX(-${index * 100}%)`;
+    });
+
+
     const pathParts = window.location.pathname.split('/');
     const listing_id = pathParts[2];
     const params = new URLSearchParams(window.location.search);
