@@ -31,3 +31,17 @@ def delete_booking_request_endpoint(booking_request_id: int):
         return { "message": "Booking request deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/incoming_requests/{owner_id}")
+def incoming_requests(owner_id: int):
+    return get_incoming_requests(owner_id)
+
+
+@router.post("/booking_requests/{req_id}/approve")
+def approve(req_id: int, owner_id: int):
+    return approve_request(req_id, owner_id)
+
+
+@router.post("/booking_requests/{req_id}/reject")
+def reject(req_id: int, owner_id: int):
+    return reject_request(req_id, owner_id)

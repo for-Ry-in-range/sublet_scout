@@ -40,6 +40,11 @@
       {% endif %}
     </section>
 
+    <section class="section">
+      <h2>Incoming Requests</h2>
+      <div id="incoming"></div>
+    </section>
+
     <div class="actions">
       <a href="/create_listing" class="btn">Add New Listing</a>
       <form action="/logout" method="POST">
@@ -50,19 +55,64 @@
 </div>
 
 <script>
-function toggleListing(listingId, activate) {
-    const url = `/listings/${listingId}/` + (activate ? "activate" : "deactivate");
+  function toggleListing(listingId, activate) {
+      const url = `/listings/${listingId}/` + (activate ? "activate" : "deactivate");
 
-    fetch(url, { method: "POST" })
-      .then(r => r.json())
-      .then(res => {
-        if (res.ok) {
-          location.reload();
-        } else {
-          alert(res.error || "Error updating listing");
-        }
+      fetch(url, { method: "POST" })
+        .then(r => r.json())
+        .then(res => {
+          if (res.ok) {
+            location.reload();
+          } else {
+            alert(res.error || "Error updating listing");
+          }
+        });
+  }
+
+  // request functionality
+    async function loadRequests() {
+      let r = await fetch("/incoming_requests/{{ user_id }}");
+      let data = await r.json();
+
+      if (!data || data.length === 0) {
+          document.getElementById("incoming").innerHTML = "<p>No requests.</p>";
+          return;
+      }
+
+      let html = "";
+      data.forEach(row => {
+          const [req, listing, user] = row;
+          html += `
+              <div class="req-box">
+                  <p><strong>${user.name}</strong> requested <em>${listing.title}</em></p>
+                  <button onclick="approve(${req.id})">Approve</button>
+                  <button onclick="reject(${req.id})">Reject</button>
+              </div>
+          `;
       });
-}
+
+      document.getElementById("incoming").innerHTML = html;
+  }
+
+  async function approve(id) {
+      const res = await fetch(`/booking_requests/${id}/approve?owner_id={{ user_id }}`, {
+          method: "POST"
+      });
+      const data = await res.json();
+      if (data.ok) {
+          alert("Approved!\n\nOwner: " + data.contact_info.owner_email + "\nRequester: " + data.contact_info.requester_email);
+          loadRequests();
+      }
+  }
+
+  async function reject(id) {
+      const res = await fetch(`/booking_requests/${id}/reject?owner_id={{ user_id }}`, {
+          method: "POST"
+      });
+      loadRequests();
+  }
+
+  loadRequests();
 </script>
 
 {% endblock %}

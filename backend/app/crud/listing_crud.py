@@ -51,7 +51,8 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
             "image3": listing_data.image3,
             "image4": listing_data.image4,
         }
-        # Get name for navbar
+        
+        user_id = user_id or request.session.get("user_id")
         user_name = None
         if user_id:
             user = session.get(User, user_id)

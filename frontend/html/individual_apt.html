@@ -43,7 +43,9 @@
         </p>
     </div>
 
-    <button id="requestBooking">Request Booking</button>
+    {% if user_id and user_id != apt.lister %}
+        <button id="request-btn">Request Booking</button>
+    {% endif %}
 
     <!-- Map -->
     <div class="map">
@@ -81,6 +83,31 @@
     const listing_id = pathParts[2];
     const params = new URLSearchParams(window.location.search);
     const user_id = params.get('user');
+
+    const tmplUserId = {{ "null" if user_id is none else user_id }};
+    const currentUserId = tmplUserId || urlUserId;
+
+    const btn = document.getElementById("request-btn");
+    if (btn) {
+        btn.addEventListener("click", async () => {
+            const res = await fetch("/booking_requests", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    listing_id: listing_id,
+                    subletter_id: currentUserId
+                })
+            });
+            const data = await res.json();
+            if (data.error) {
+                alert(data.error);
+            } else {
+                alert("Request sent!");
+                location.reload();
+            }
+        });
+    }
+
     document.getElementById("requestBooking").onclick = function() {
         console.log("sdajfsakdl");
         fetch('/booking_requests', {method: 'POST',
@@ -109,6 +136,28 @@
             map: map,
         });
     };
+
+    // request button logic
+    if (document.getElementById("request-btn")) {
+    document.getElementById("request-btn").addEventListener("click", async () => {
+        const res = await fetch("/booking_requests", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                listing_id: {{ listing_id }},
+                subletter_id: {{ user_id }}
+            })
+        });
+
+        const data = await res.json();
+        if (data.error) {
+            alert(data.error);
+        } else {
+            alert("Request sent!");
+            location.reload();
+        }
+    });
+}
 
 </script>
 
