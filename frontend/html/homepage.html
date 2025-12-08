@@ -14,9 +14,10 @@
     <p>Find verified student sublets in New York City.</p>
 
     <h2>Search for Sublets</h2>
-    <form action="{{ url_for('show_homepage') }}" method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
-      <input type="text" id="q" name="q" placeholder="Location (neighborhood or city)" value="{{ query }}" style="flex:1 1 200px;padding:.4rem;">
+    <form class="search_form" action="{{ url_for('show_homepage') }}" method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
       <input type="number" id="price" name="price" placeholder="Max $" value="{{ price }}" style="width:110px;padding:.4rem;">
+      <input type="number" id="bedrooms" name="bedrooms" placeholder="Min bedrooms" value="{{ bedrooms }}" style="width:110px;padding:.4rem;">
+      <input type="number" id="bathrooms" name="bathrooms" placeholder="Min bathrooms" value="{{ bathrooms }}" style="width:110px;padding:.4rem;">
       <div style="display:flex;gap:.5rem;width:100%;">
         <label>Start date<input type="date" id="start_date" name="start_date" style="flex:1 1 160px;padding:.4rem;"></label>
         <label>End date<input type="date" id="end_date" name="end_date" style="flex:1 1 160px;padding:.4rem;"></label>
@@ -35,63 +36,119 @@
 
 <!-- Build listings JS array from template-provided listings -->
 <script>
-var listings = [
-{% for l in listings %}
-  {
-    id: {{ l.id }},
-    title: "{{ l.title|e }}",
-    address: "{{ l.full_address|e }}",
-    full_address: "{{ l.full_address|e }}",
-    latitude: {{ l.latitude if l.latitude is not none else "null" }},
-    longitude: {{ l.longitude if l.longitude is not none else "null" }},
-    cost_per_month: {{ l.cost_per_month }}
-  }{% if not loop.last %},{% endif %}
-{% endfor %}
-];
+  var listings = [
+  {% for l in listings %}
+    {
+      id: {{ l.id }},
+      title: "{{ l.title|e }}",
+      address: "{{ l.full_address|e }}",
+      full_address: "{{ l.full_address|e }}",
+      latitude: {{ l.latitude if l.latitude is not none else "null" }},
+      longitude: {{ l.longitude if l.longitude is not none else "null" }},
+      cost_per_month: {{ l.cost_per_month }}
+    }{% if not loop.last %},{% endif %}
+  {% endfor %}
+  ];
 
-// simple escape helper for text inserted into info windows
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+  // simple escape helper for text inserted into info windows
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-function initMap() {
-  var nyc = { lat: 40.7128, lng: -74.0060 };
-  var map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: nyc
-  });
+  function initMap() {
+    var nyc = { lat: 40.755672, lng: -73.910948 };
+    var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 12,
+      center: nyc
+    });
 
-  listings.forEach(function(item) {
-    if (typeof item.latitude === 'number' && typeof item.longitude === 'number') {
-      var pos = { lat: item.latitude, lng: item.longitude };
-      var marker = new google.maps.Marker({
-        map: map,
-        position: pos,
-        title: item.title
+    const storage = JSON.parse(localStorage.getItem('searchResults') || '[]');
+    if (storage != ''){
+      localStorage.removeItem('searchResults');
+      console.log(storage);
+      listings.forEach(function(item) {
+        if (storage.includes(item.id)) {
+          if (typeof item.latitude === 'number' && typeof item.longitude === 'number') {
+            var pos = { lat: item.latitude, lng: item.longitude };
+            var marker = new google.maps.Marker({
+              map: map,
+              position: pos,
+              title: item.title
+            });
+          var content =
+            '<div>' +
+              '<strong>' +
+                '<a href="/listings/' + item.id + '?user_id={{ user_id }}"' +
+                  'style="text-decoration:none;color:#1a73e8;">' +
+                  escapeHtml(item.title) +
+                '</a>' +
+              '</strong>' +
+              '<div>$' + (item.cost_per_month||'') + ' / month</div>' +
+              '<div style="font-size:90%;">' + (item.full_address||'') + '</div>' +
+            '</div>';
+
+            var info = new google.maps.InfoWindow({ content: content });
+            marker.addListener('click', function(){ info.open(map, marker); });
+          }
+        }
       });
-     var content =
-      '<div>' +
-        '<strong>' +
-          '<a href="/listings/' + item.id + '?user_id={{ user_id }}"' +
-            'style="text-decoration:none;color:#1a73e8;">' +
-            escapeHtml(item.title) +
-          '</a>' +
-        '</strong>' +
-        '<div>$' + (item.cost_per_month||'') + ' / month</div>' +
-        '<div style="font-size:90%;">' + (item.full_address||'') + '</div>' +
-      '</div>';
+    } else {
+      listings.forEach(function(item) {
+        if (typeof item.latitude === 'number' && typeof item.longitude === 'number') {
+          var pos = { lat: item.latitude, lng: item.longitude };
+          var marker = new google.maps.Marker({
+            map: map,
+            position: pos,
+            title: item.title
+          });
+        var content =
+          '<div>' +
+            '<strong>' +
+              '<a href="/listings/' + item.id + '?user_id={{ user_id }}"' +
+                'style="text-decoration:none;color:#1a73e8;">' +
+                escapeHtml(item.title) +
+              '</a>' +
+            '</strong>' +
+            '<div>$' + (item.cost_per_month||'') + ' / month</div>' +
+            '<div style="font-size:90%;">' + (item.full_address||'') + '</div>' +
+          '</div>';
 
+          var info = new google.maps.InfoWindow({ content: content });
+          marker.addListener('click', function(){ info.open(map, marker); });
+        }
+      });
+    }
+  }
 
-      var info = new google.maps.InfoWindow({ content: content });
-      marker.addListener('click', function(){ info.open(map, marker); });
+  const form = document.querySelector('.search_form');
+  form.addEventListener('submit', async (e) => {
+    ['price', 'bedrooms', 'bathrooms', 'start_date', 'end_date'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input && !input.value) {
+        input.value = 'None';
+      }
+    });
+    e.preventDefault();
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData).toString();
+    console.log("params", params);
+    const response = await fetch(`/search_results?${params}`, { method: 'GET' });
+    const data = await response.json();
+    console.log(data);
+    if (response.ok) {
+      localStorage.setItem('searchResults', JSON.stringify(data))
+      window.location.href = '/homepage';
+    }
+    else {
+      alert('Failed');
     }
   });
-}
+
 </script>
 
 <script async defer

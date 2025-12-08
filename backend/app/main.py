@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import os, bcrypt
+from typing import Optional
 
 from app.database import Base, engine, SessionLocal
 from app.models.user import User
@@ -241,22 +242,62 @@ def show_profile(request: Request, user_id: int):
     )
 
 @app.get("/search_results")
-def get_search_results(filters: SearchFilterStructure):
+def get_search_results(
+    price: Optional[str] = None,
+    bedrooms: Optional[str] = None,
+    bathrooms: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    price_val = None
+    bedrooms_val = None
+    bathrooms_val = None
+    start_date_val = None
+    end_date_val = None
+    try:
+        if price not in (None, '', 'null'):
+            price_val = float(price)
+    except:
+        pass
+    try:
+        if bedrooms not in (None, '', 'null'):
+            bedrooms_val = int(bedrooms)
+    except:
+        pass
+    try:
+        if bathrooms not in (None, '', 'null'):
+            bathrooms_val = int(bathrooms)
+    except:
+        pass
+    try:
+        if start_date not in (None, '', 'null'):
+            start_date_val = start_date
+    except:
+        pass
+    try:
+        if end_date not in (None, '', 'null'):
+            end_date_val = end_date
+    except:
+        pass
+
     session = SessionLocal()
     try:
         query = session.query(Listing)  # Initialize query for the Listing table
-        if filters.cost_per_month is not None:
-            query = query.filter(Listing.cost_per_month <= filters.cost_per_month)
-        if filters.bedrooms_available is not None:
-            query = query.filter(Listing.bedrooms_available >= filters.bedrooms_available)
-        if filters.bathrooms is not None:
-            query = query.filter(Listing.bathrooms >= filters.bathrooms)
-        if filters.available_start_date is not None:
-            query = query.filter(Listing.available_start_date <= filters.available_start_date)
-        if filters.available_end_date is not None:
-            query = query.filter(Listing.available_end_date >= filters.available_end_date)
+        if price_val is not None:
+            query = query.filter(Listing.cost_per_month <= price)
+        if bedrooms_val is not None:
+            query = query.filter(Listing.bedrooms_available >= bedrooms)
+        if bathrooms_val is not None:
+            query = query.filter(Listing.bathrooms >= bathrooms)
+        if start_date_val is not None:
+            query = query.filter(Listing.available_start_date <= start_date)
+        if end_date_val is not None:
+            query = query.filter(Listing.available_end_date >= end_date)
         results = query.all()
-        return results
+        ids = [result.id for result in results]
+        return ids
+    except Exception as e:
+        return str(e)
     finally:
         session.close()
 

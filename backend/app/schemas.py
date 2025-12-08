@@ -27,8 +27,8 @@ class BookingRequestStructure(BaseModel):
     subletter_id: int
 
 class SearchFilterStructure(BaseModel):
-    cost_per_month: Optional[float] = None
-    bedrooms_available: Optional[int] = None
+    price: Optional[float] = None
+    bedrooms: Optional[int] = None
     bathrooms: Optional[int] = None
-    available_start_date: Optional[date] = None
-    available_end_date: Optional[date] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
