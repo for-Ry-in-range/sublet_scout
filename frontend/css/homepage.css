@@ -81,6 +81,8 @@ a:hover {
     margin: 0;
 }
 
+.nav li form { display: inline; margin: 0; padding: 0; }
+
 .nav a {
     color: white;
     text-decoration: none;
@@ -90,7 +92,25 @@ a:hover {
     transition: background-color 0.2s ease;
 }
 
-.nav a:hover {
+.nav-btn {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: white;
+  font: inherit;
+  font-weight: bold;
+  padding: 0.5rem 0.75rem;
+  display: inline-block;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.nav a:hover, .nav-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
 }

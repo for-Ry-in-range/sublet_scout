@@ -28,13 +28,35 @@
                 <li><a href="{{ url_for('show_login') }}">Profile</a></li>
             {% endif %}
 
-            <li><a href="{{ url_for('show_login') }}">Login</a></li>
+            {% if user_id %}
+              <li>
+                <form id="logout-form" action="/logout" method="POST" style="display:inline;">
+                  <button type="submit" class="nav-btn">Log out</button>
+                </form>
+              </li>
+            {% else %}
+              <li><a href="{{ url_for('show_login') }}">Login</a></li>
+            {% endif %}
         </ul>
     </nav>
 
-    <!-- page-specific content will render here -->
     <main>
         {% block content %}{% endblock %}
     </main>
+
+    <script>
+      const lf = document.getElementById('logout-form');
+      if (lf) {
+        lf.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          try {
+            const res = await fetch('/logout', { method: 'POST', credentials: 'same-origin' });
+            window.location.href = "{{ url_for('show_login') }}";
+          } catch {
+            window.location.href = "{{ url_for('show_login') }}";
+          }
+        });
+      }
+    </script>
 </body>
 </html>
