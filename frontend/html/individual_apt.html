@@ -3,166 +3,143 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', path='individual_apt.css') }}">
 
-<div class="container" style="padding-top: 6.0rem;">
-    <h1>{{ apt.title }}</h1>
-
-    <!-- Image Carousel -->
-    <div class="carousel">
-    <div class="carousel-track">
-        {% if apt.image1 %}
-        <img src="data:image/webp;base64,{{ apt.image1 }}" class="carousel-img">
-        {% endif %}
-        {% if apt.image2 %}
-        <img src="data:image/webp;base64,{{ apt.image2 }}" class="carousel-img">
-        {% endif %}
-        {% if apt.image3 %}
-        <img src="data:image/webp;base64,{{ apt.image3 }}" class="carousel-img">
-        {% endif %}
-        {% if apt.image4 %}
-        <img src="data:image/webp;base64,{{ apt.image4 }}" class="carousel-img">
-        {% endif %}
+<div class="listing-wrap">
+  <header class="listing-header">
+    <h1 class="listing-title">{{ apt.title }}</h1>
+    <div class="listing-sub">
+      <span><strong>${{ "%.2f"|format(apt.cost_per_month) }}</strong>/month</span>
+      <span>{{ apt.bedrooms_available }} beds • {{ apt.bathrooms }} baths</span>
+      <span>{{ apt.available_start_date }} – {{ apt.available_end_date }}</span>
     </div>
+  </header>
 
-    <div class="carousel-controls">
-        <button class="carousel-btn prev">❮</button>
-        <button class="carousel-btn next">❯</button>
-    </div>
-</div>
+  <section class="listing-grid">
+    <!-- Left: details and actions -->
+    <aside class="listing-details">
+      <h2>Details</h2>
+      <ul class="detail-list">
+        <li><strong>Bedrooms Available:</strong> {{ apt.bedrooms_available }}</li>
+        <li><strong>Total Rooms:</strong> {{ apt.total_rooms }}</li>
+        <li><strong>Bedrooms In Use:</strong> {{ apt.bedrooms_in_use }}</li>
+        <li><strong>Bathrooms:</strong> {{ apt.bathrooms }}</li>
+      </ul>
 
-
-    <!-- Details -->
-    <div class="details">
-        <p><strong>Bedrooms Available:</strong> {{ apt.bedrooms_available }}</p>
-        <p><strong>Total Rooms:</strong> {{ apt.total_rooms }}</p>
-        <p><strong>Bedrooms In Use:</strong> {{ apt.bedrooms_in_use }}</p>
-        <p><strong>Bathrooms:</strong> {{ apt.bathrooms }}</p>
-        <p><strong>Price:</strong> ${{ "%.2f"|format(apt.cost_per_month) }}/month</p>
-
-        <p><strong>Available:</strong> 
-            {{ apt.available_start_date }} to {{ apt.available_end_date }}
-        </p>
-    </div>
-
-    {% if user_id and user_id != apt.lister %}
-        <button id="request-btn">Request Booking</button>
-    {% endif %}
-
-    <!-- Map -->
-    <div class="map">
-        <h2>Location</h2>
-        <div id="google-map"></div>
-    </div>
-
-    <!-- Amenities -->
-    <h2>Amenities</h2>
-    <ul>
+      <h2>Amenities</h2>
+      <ul class="amenities">
         {% for amenity in apt.amenities.split(',') %}
-            <li>{{ amenity.strip() }}</li>
+          <li>{{ amenity.strip() }}</li>
         {% endfor %}
-    </ul>
+      </ul>
+
+      {% if user_id and user_id != apt.lister %}
+        <div class="listing-actions">
+          <button id="request-btn" class="btn primary">Request Booking</button>
+        </div>
+      {% endif %}
+    </aside>
+
+    <!-- Right: media (carousel + map) -->
+    <section class="listing-media">
+      <!-- Carousel -->
+      <div class="card">
+        <div class="carousel">
+          <div class="carousel-track">
+            {% if apt.image1 %}
+              <img src="data:image/webp;base64,{{ apt.image1 }}" class="carousel-img" alt="Photo 1">
+            {% endif %}
+            {% if apt.image2 %}
+              <img src="data:image/webp;base64,{{ apt.image2 }}" class="carousel-img" alt="Photo 2">
+            {% endif %}
+            {% if apt.image3 %}
+              <img src="data:image/webp;base64,{{ apt.image3 }}" class="carousel-img" alt="Photo 3">
+            {% endif %}
+            {% if apt.image4 %}
+              <img src="data:image/webp;base64,{{ apt.image4 }}" class="carousel-img" alt="Photo 4">
+            {% endif %}
+          </div>
+        </div>
+        <div class="carousel-controls">
+          <button class="carousel-btn prev" aria-label="Previous">❮</button>
+          <button class="carousel-btn next" aria-label="Next">❯</button>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="card">
+        <h3 class="card-title">Location</h3>
+        <div id="google-map"></div>
+      </div>
+    </section>
+  </section>
 </div>
 
 <script>
-    // Carousel logic
-    let index = 0;
-    const track = document.querySelector(".carousel-track");
-    const images = document.querySelectorAll(".carousel-img");
+  // Carousel logic
+  let index = 0;
+  const track = document.querySelector(".carousel-track");
+  const images = document.querySelectorAll(".carousel-img");
+  const prevBtn = document.querySelector(".carousel-btn.prev");
+  const nextBtn = document.querySelector(".carousel-btn.next");
 
-    document.querySelector(".carousel-btn.next").addEventListener("click", () => {
-        index = (index + 1) % images.length;
-        track.style.transform = `translateX(-${index * 100}%)`;
+  function updateCarousel() {
+    if (!images.length) return;
+    track.style.transform = `translateX(-${index * 100}%)`;
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      index = (index + 1) % images.length;
+      updateCarousel();
     });
-
-    document.querySelector(".carousel-btn.prev").addEventListener("click", () => {
-        index = (index - 1 + images.length) % images.length;
-        track.style.transform = `translateX(-${index * 100}%)`;
+  }
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      index = (index - 1 + images.length) % images.length;
+      updateCarousel();
     });
+  }
 
-
-    const pathParts = window.location.pathname.split('/');
-    const listing_id = pathParts[2];
-    const params = new URLSearchParams(window.location.search);
-    const user_id = params.get('user');
-
-    const tmplUserId = {{ "null" if user_id is none else user_id }};
-    const currentUserId = tmplUserId || urlUserId;
-
-    const btn = document.getElementById("request-btn");
-    if (btn) {
-        btn.addEventListener("click", async () => {
-            const res = await fetch("/booking_requests", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    listing_id: listing_id,
-                    subletter_id: currentUserId
-                })
-            });
-            const data = await res.json();
-            if (data.error) {
-                alert(data.error);
-            } else {
-                alert("Request sent!");
-                location.reload();
-            }
-        });
-    }
-
-    document.getElementById("requestBooking").onclick = function() {
-        console.log("sdajfsakdl");
-        fetch('/booking_requests', {method: 'POST',
-            headers: { 'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                listing_id: listing_id,
-                subletter_id: user_id
-            })
-        })
-        .then(response => {
-            console.log('Fetch response:', response);
-        })
-        .catch(error => {
-            console.error()
-        });
-    };
-
-    function initMap() {
-        const location = { lat: {{ apt.latitude }}, lng: {{apt.longitude}} };
-        const map = new google.maps.Map(document.getElementById("google-map"), {
-            zoom: 14,
-            center: location,
-        });
-        new google.maps.Marker({
-            position: location,
-            map: map,
-        });
-    };
-
-    // request button logic
-    if (document.getElementById("request-btn")) {
-    document.getElementById("request-btn").addEventListener("click", async () => {
+  // Request booking
+  const pathParts = window.location.pathname.split('/');
+  const listing_id = pathParts[2];
+  const btn = document.getElementById("request-btn");
+  if (btn) {
+    btn.addEventListener("click", async () => {
+      try {
         const res = await fetch("/booking_requests", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                listing_id: {{ listing_id }},
-                subletter_id: {{ user_id }}
-            })
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            listing_id: listing_id,
+            subletter_id: {{ user_id if user_id is not none else 'null' }}
+          })
         });
-
         const data = await res.json();
         if (data.error) {
-            alert(data.error);
+          alert(data.error);
         } else {
-            alert("Request sent!");
-            location.reload();
+          alert("Request sent!");
+          location.reload();
         }
+      } catch (e) {
+        alert("Something went wrong. Please try again.");
+      }
     });
-}
+  }
 
+  // Google Map
+  function initMap() {
+    const location = { lat: {{ apt.latitude }}, lng: {{ apt.longitude }} };
+    const map = new google.maps.Map(document.getElementById("google-map"), {
+      zoom: 14,
+      center: location,
+      disableDefaultUI: false,
+    });
+    new google.maps.Marker({ position: location, map });
+  }
+  window.initMap = initMap;
 </script>
 
 <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key={{ map_key }}&callback=initMap">
-</script>
-
+  src="https://maps.googleapis.com/maps/api/js?key={{ map_key }}&callback=initMap"></script>
 {% endblock %}

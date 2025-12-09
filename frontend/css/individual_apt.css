@@ -1,8 +1,20 @@
+:root {
+  --bg: #f7f9fb;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --primary: #2563eb;
+  --primary-hover: #1e40af;
+}
+
+* { box-sizing: border-box; }
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  margin: 0;
+  color: var(--text);
+  background-color: var(--bg);
 }
 
 .container {
@@ -32,24 +44,22 @@ ul {
 
 #google-map {
     width: 100%;
-    height: 400px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    height: 280px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
 }
 
 .carousel {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    height: 350px;
-    margin: 20px auto;
-    overflow: visible;
-    border-radius: 10px;
+  position: relative;
+  width: 100%;
+  height: 300px;        /* slightly tighter */
+  overflow: hidden;     /* clean edges */
+  border-radius: 10px;
 }
 
 .carousel-track {
     display: flex;
-    transition: transform 0.4s ease;
+    transition: transform 0.35s ease;
     height: 100%;
 }
 
@@ -58,6 +68,7 @@ ul {
     height: 100%;
     object-fit: cover;
     flex-shrink: 0;
+    border-radius: 8px;
 }
 
 .carousel-controls {
@@ -70,19 +81,135 @@ ul {
 
 .carousel-btn {
     border: none;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
+    background: rgba(31, 41, 55, 0.6);
+    color: #fff;
     cursor: pointer;
     padding: 6px 10px;
     font-size: 18px;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.carousel-btn:hover {
-    background: rgba(0, 0, 0, 0.75);
+.carousel-btn:hover { background: rgba(31, 41, 55, 0.8); }
+
+/* Listing */
+.listing-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.listing-header { margin-bottom: 12px; }
+.listing-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.listing-sub {
+  margin-top: 6px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.listing-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(420px, 1.25fr);
+  gap: 16px; /* tighter spacing */
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+}
+.card-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: #374151;
+}
+
+/* Left column */
+.listing-details {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+}
+.listing-details h2 {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  color: #374151;
+}
+.detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+}
+.detail-list li {
+  margin: 6px 0;
+  line-height: 1.4;
+}
+
+/* Amenities */
+.amenities {
+  list-style: square;
+  padding-left: 1.25rem;
+  margin: 6px 0 0;
+}
+.amenities li { margin: 4px 0; }
+
+/* Actions */
+.listing-actions {
+  margin-top: 12px;
+}
+.btn {
+  display: inline-block;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.btn.primary:hover { background: var(--primary-hover); }
+
+/* Right column: media */
+.listing-media {
+  display: grid;
+  gap: 12px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .listing-grid { grid-template-columns: 1fr; }
+  .listing-wrap { padding: 20px 12px; }
+  .listing-title { font-size: 1.6rem; }
+}
+@media (max-width: 560px) {
+  .listing-title { font-size: 1.45rem; }
+  #google-map { height: 240px; }
 }
