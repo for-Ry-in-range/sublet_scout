@@ -82,7 +82,6 @@ def get_listing_by_id(request: Request, listing_id: int, user_id: int | None = N
 async def create_listing(
     request: Request,
     title: str,
-    is_active: bool,
     bedrooms_available: int,
     total_rooms: int,
     bedrooms_in_use: int,
