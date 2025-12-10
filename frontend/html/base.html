@@ -17,9 +17,9 @@
             </li>
             <li>
                 {% if user_id %}
-                    <a href="{{ url_for('show_homepage') }}?user_id={{ user_id }}">Home</a>
+                    <a href="{{ url_for('show_homepage') }}?user_id={{ user_id }}">Search</a>
                 {% else %}
-                    <a href="{{ url_for('show_homepage') }}">Home</a>
+                    <a href="{{ url_for('show_homepage') }}">Search</a>
                 {% endif %}
             </li>
             {% if user_name and user_id %}
