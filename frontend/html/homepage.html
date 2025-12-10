@@ -3,7 +3,9 @@
 {% block title %}Sublet Scout | Home{% endblock %}
 
 {% block content %}
-<div class="container" style="display:flex;gap:1rem;align-items:flex-start;">
+<link rel="stylesheet" href="{{ url_for('static', path='homepage.css') }}">
+
+<div class="container">
   <div style="flex:0 0 360px;">
     <h1>Sublet Scout</h1>
     {% if user_name %}
