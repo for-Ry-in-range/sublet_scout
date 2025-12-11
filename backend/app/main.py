@@ -231,7 +231,8 @@ def show_profile(request: Request, user_id: int):
                 "id": l.id,
                 "title": l.title,
                 "city": l.city,
-                "cost_per_month": l.cost_per_month
+                "cost_per_month": l.cost_per_month,
+                "is_active": l.is_active
             } for l in listings_objs
         ]
     finally:
